@@ -1,7 +1,7 @@
 Proximity Sensor Disabler
 ========================
 
-This disables the proximity sensor in 4.1 - 5.0.1 devices. It has not been tested on anything less than 4.1, and does not currently work on 5.1.
+This disables the proximity sensor in 4.1 - 6.0 devices. It has not been tested on anything less than 4.1, and does currently have Marshmallow support.  
 
 Installation
 ------------
