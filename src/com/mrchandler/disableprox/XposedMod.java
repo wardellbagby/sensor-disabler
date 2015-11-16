@@ -49,7 +49,6 @@ public class XposedMod implements IXposedHookLoadPackage {
                         }
                 );
             } else {
-
                 XposedHelpers.findAndHookMethod(
                         "android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader, "dispatchSensorEvent", int.class, float[].class, int.class, long.class, new XC_MethodHook() {
                             @SuppressWarnings("unchecked")
@@ -57,16 +56,21 @@ public class XposedMod implements IXposedHookLoadPackage {
                             protected void beforeHookedMethod(MethodHookParam param)
                                     throws Throwable {
                                 // This pulls the 'Handle to Sensor' array straight from the SystemSensorManager class, so it should always pull the appropriate sensor.
-                                SparseArray<Sensor> sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
+                                SparseArray<Sensor> sensors;
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                                    sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
+                                } else {
+                                    Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
+                                    sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                                }
 
                                 // params.args[] is an array that holds the arguments that dispatchSensorEvent received, which are a handle pointing to a sensor
                                 // in sHandleToSensor and a float[] of values that should be applied to that sensor.
                                 int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                                 Sensor s = sensors.get(handle);
                                 if (s.getType() == Sensor.TYPE_PROXIMITY) {// This could be expanded to disable ANY sensor.
-
                                     float[] values = (float[]) param.args[1];
-                                    values[0] = 100f;
+                                    values[0] = s.getMaximumRange();
                                     param.args[1] = values;
                                 }
                             }
