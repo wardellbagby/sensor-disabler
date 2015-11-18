@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Disable Proximitiy Sensor.iml" filepath="$PROJECT_DIR$/.idea/Disable Proximitiy Sensor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DisableProx.iml" filepath="$PROJECT_DIR$/DisableProx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
 </project>
-
