@@ -20,7 +20,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -30,15 +29,9 @@ import android.widget.TextView;
 
 import com.mrchandler.disableprox.R;
 import com.mrchandler.disableprox.util.Constants;
-import com.mrchandler.disableprox.util.FileUtil;
 import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
-
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Scanner;
 
 public final class SettingsActivity extends Activity {
 
@@ -55,16 +48,10 @@ public final class SettingsActivity extends Activity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        prefs = getSharedPreferences("com.mrchandler.disableprox_preferences", MODE_WORLD_READABLE);
+
         if (null == savedInstanceState) {
-            try {
-                Scanner scanner = new Scanner(FileUtil.getEnabledSettingsFile());
-                if (scanner.hasNextBoolean()) {
-                    ((Switch) findViewById(android.R.id.checkbox)).setChecked(scanner.nextBoolean());
-                }
-            } catch (FileNotFoundException e) {
-                //Just don't set the checkbox.
-                Log.e(TAG, "Unable to get the settings.", e);
-            }
+            ((Switch) findViewById(android.R.id.checkbox)).setChecked(prefs.getBoolean(Constants.PREFS_KEY_PROX_SENSOR, true));
         }
 
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -95,8 +82,6 @@ public final class SettingsActivity extends Activity {
                         PERMISSION_RESULT_CODE);
             }
         }
-        prefs = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
-
 
         freeloadTextView = (TextView) findViewById(R.id.freeload);
         if (prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false)) {
@@ -164,15 +149,7 @@ public final class SettingsActivity extends Activity {
     @Override
     public void finish() {
         if (saveToFile) {
-            try {
-                FileWriter writer = new FileWriter(FileUtil.getEnabledSettingsFile());
-                writer.write(String.valueOf(((Switch) findViewById(android.R.id.checkbox)).isChecked()));
-                writer.flush();
-                writer.close();
-            } catch (IOException | SecurityException e) {
-                //Finish gracefully.
-                Log.e(TAG, "Unable to save settings to file.", e);
-            }
+            prefs.edit().putBoolean(Constants.PREFS_KEY_PROX_SENSOR, ((Switch) findViewById(android.R.id.checkbox)).isChecked()).apply();
         }
         super.finish();
     }

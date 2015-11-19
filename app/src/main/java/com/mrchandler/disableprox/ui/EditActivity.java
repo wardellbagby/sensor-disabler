@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -77,7 +76,7 @@ public final class EditActivity extends AbstractPluginActivity {
             }
         }
         final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences prefs = getSharedPreferences("com.mrchandler.disableprox_preferences", MODE_WORLD_READABLE);
         //Has the user purchased the Tasker IAP?
         if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
