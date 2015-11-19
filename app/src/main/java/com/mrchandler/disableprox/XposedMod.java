@@ -4,19 +4,18 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.SparseArray;
 
 import com.mrchandler.disableprox.util.Constants;
-import com.mrchandler.disableprox.util.FileUtil;
 
-import java.io.FileNotFoundException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
@@ -177,30 +176,15 @@ public class XposedMod implements IXposedHookLoadPackage {
     boolean getProximitySensorStatus() {
         //False == Turn Off, True == Leave On
         //Always assume that the user wants it disabled. They can disable the app if we fail somehow.
-        boolean proximitySensorStatus = false;
-        try {
-            Scanner scanner = new Scanner(FileUtil.getEnabledSettingsFile());
-            if (scanner.hasNextBoolean()) {
-                proximitySensorStatus = scanner.nextBoolean();
-            }
-        } catch (FileNotFoundException e) {
-            //We do nothing and assume that the proximity sensor should be disabled.
-        }
-        return proximitySensorStatus;
+        XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
+        XSharedPreferences sharedPreferences = new XSharedPreferences("com.mrchandler.disableprox");
+        return sharedPreferences.getBoolean(Constants.PREFS_KEY_PROX_SENSOR, false);
+
     }
 
-    //TODO Implement a visual system for this.
+    //TODO Implement a visual system for this so users can pick which method.
     int getMethodsUsedForDisabling() {
-        int enabledMethods = Constants.ENABLE_METHOD_1;
-        try {
-            Scanner scanner = new Scanner(FileUtil.getEnabledMethodsFile());
-            if (scanner.hasNextInt()) {
-                enabledMethods = scanner.nextInt();
-            }
-        } catch (FileNotFoundException e) {
-            //We do nothing and use the default method.
-        }
-        return enabledMethods;
+        return Constants.ENABLE_METHOD_1;
     }
 
     /**

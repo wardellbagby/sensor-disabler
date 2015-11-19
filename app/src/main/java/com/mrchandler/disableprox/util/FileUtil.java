@@ -14,9 +14,9 @@ public final class FileUtil {
     }
 
     public static File getEnabledSettingsFile() {
-        File file = new File(Environment.getExternalStorageDirectory() + PROX_FILE_NAME);
+        File file = new File(Environment.getExternalStorageDirectory() + PROX_FILES_DIRECTORY + PROX_FILE_NAME);
         if (!file.exists()) {
-            new File(PROX_FILES_DIRECTORY).mkdirs();
+            new File(Environment.getExternalStorageDirectory() + PROX_FILES_DIRECTORY).mkdirs();
             try {
                 file.createNewFile();
             } catch (IOException e) {
@@ -28,9 +28,9 @@ public final class FileUtil {
     }
 
     public static File getEnabledMethodsFile() {
-        File file = new File(Environment.getExternalStorageDirectory() + PROX_SETTINGS_FILE_NAME);
+        File file = new File(Environment.getExternalStorageDirectory() + PROX_FILES_DIRECTORY + PROX_SETTINGS_FILE_NAME);
         if (!file.exists()) {
-            new File(PROX_FILES_DIRECTORY).mkdirs();
+            new File(Environment.getExternalStorageDirectory() + PROX_FILES_DIRECTORY).mkdirs();
             try {
                 file.createNewFile();
             } catch (IOException e) {

@@ -16,6 +16,7 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -24,11 +25,7 @@ import android.util.Log;
 import com.mrchandler.disableprox.bundle.BundleScrubber;
 import com.mrchandler.disableprox.bundle.PluginBundleManager;
 import com.mrchandler.disableprox.util.Constants;
-import com.mrchandler.disableprox.util.FileUtil;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Locale;
 
 /**
@@ -71,15 +68,8 @@ public final class FireReceiver extends BroadcastReceiver {
                 Log.e(Constants.LOG_TAG, "The Tasker Receiver does not have permission to write to storage.");
 
             } else {
-                File settingsFile = FileUtil.getEnabledSettingsFile();
-                try {
-                    FileWriter writer = new FileWriter(settingsFile);
-                    writer.write(String.valueOf(setting));
-                    writer.flush();
-                    writer.close();
-                } catch (IOException e) {
-                    //We can't save the setting like this but we know the file exist.
-                }
+                SharedPreferences prefs = context.getSharedPreferences("com.mrchandler.disableprox_preferences", Context.MODE_WORLD_READABLE);
+                prefs.edit().putBoolean(Constants.PREFS_KEY_PROX_SENSOR, setting).apply();
             }
         }
     }

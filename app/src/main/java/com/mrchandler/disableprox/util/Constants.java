@@ -44,6 +44,7 @@ public final class Constants {
     public static final String SKU_TASKER = "tasker_purchase";
     public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
     public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
+    public static final String PREFS_KEY_PROX_SENSOR = "prefs_key_prox_sensor";
     public static final int ENABLE_METHOD_1 = 1;
     public static final int ENABLE_METHOD_2 = 2;
     public static final int ENABLE_METHOD_3 = 4;
