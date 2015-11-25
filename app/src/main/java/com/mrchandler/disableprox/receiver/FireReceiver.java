@@ -68,7 +68,7 @@ public final class FireReceiver extends BroadcastReceiver {
                 Log.e(Constants.LOG_TAG, "The Tasker Receiver does not have permission to write to storage.");
 
             } else {
-                SharedPreferences prefs = context.getSharedPreferences("com.mrchandler.disableprox_preferences", Context.MODE_WORLD_READABLE);
+                SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
                 prefs.edit().putBoolean(Constants.PREFS_KEY_PROX_SENSOR, setting).apply();
             }
         }

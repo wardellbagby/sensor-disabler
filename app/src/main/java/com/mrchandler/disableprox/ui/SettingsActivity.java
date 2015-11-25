@@ -12,19 +12,20 @@
 
 package com.mrchandler.disableprox.ui;
 
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.Intent;
+
+import android.app.ActionBar;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Switch;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.mrchandler.disableprox.R;
@@ -33,61 +34,46 @@ import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
 
-public final class SettingsActivity extends Activity {
+import java.util.ArrayList;
+import java.util.List;
+
+public final class SettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
     private static final int PERMISSION_RESULT_CODE = 192;
+    private static final String CURRENT_FRAGMENT = "currentFragment";
+    private static final String SELECTED_ITEM_POSITION = "selectedItemPosition";
 
     IabHelper helper;
     SharedPreferences prefs;
-    TextView freeloadTextView;
+    List<Sensor> fullSensorList = new ArrayList<>();
+    Spinner spinner;
 
-    boolean saveToFile = true;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-        prefs = getSharedPreferences("com.mrchandler.disableprox_preferences", MODE_WORLD_READABLE);
+        setContentView(R.layout.sensor_setting_layout);
+        SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        fullSensorList = manager.getSensorList(Sensor.TYPE_ALL);
+        initActionBar();
 
-        if (null == savedInstanceState) {
-            ((Switch) findViewById(android.R.id.checkbox)).setChecked(prefs.getBoolean(Constants.PREFS_KEY_PROX_SENSOR, true));
-        }
-
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-                new AlertDialog.Builder(this)
-                        .setMessage("In order to allow the ability to change the proximity sensor setting without restarting, this app needs to save the settings to a file. \n\nWill you allow this app to save data on this phone's storage?")
-                        .setPositiveButton("Yes, that's fine.", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ActivityCompat.requestPermissions(SettingsActivity.this,
-                                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                        192);
-                            }
-                        })
-                        .setNegativeButton("No, I'd rather not.", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                        .setCancelable(false)
-                        .create().show();
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        PERMISSION_RESULT_CODE);
+        if (savedInstanceState != null) {
+            if (spinner != null) {
+                spinner.setSelection(savedInstanceState.getInt(SELECTED_ITEM_POSITION));
             }
+            Fragment fragment = getSupportFragmentManager().getFragment(savedInstanceState, CURRENT_FRAGMENT);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT).commit();
         }
 
-        freeloadTextView = (TextView) findViewById(R.id.freeload);
+        //Has to be done to access with XSharedPreferences.
+        prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
+
+        //freeloadTextView = (TextView) findViewById(R.id.freeload);
         if (prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false)) {
-            freeloadTextView.setVisibility(View.VISIBLE);
+            //         freeloadTextView.setVisibility(View.VISIBLE);
         } else if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
-            freeloadTextView.setVisibility(View.GONE);
+            //          freeloadTextView.setVisibility(View.GONE);
         }
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
@@ -117,40 +103,85 @@ public final class SettingsActivity extends Activity {
                 }
             });
         }
-        findViewById(android.R.id.checkbox).setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false)) {
-                    prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
-                    freeloadTextView.setVisibility(View.GONE);
-                } else if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
-                    freeloadTextView.setVisibility(View.VISIBLE);
-                    prefs.edit().putBoolean(Constants.PREFS_KEY_FREELOAD, true).apply();
-                }
-                return true;
+    }
+
+    private void initActionBar() {
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setDisplayShowCustomEnabled(true);
+            actionBar.setCustomView(R.layout.actionbar_layout);
+            if (actionBar.getCustomView() instanceof Spinner) {
+                spinner = (Spinner) actionBar.getCustomView();
             }
-        });
-    }
+            if (spinner != null) {
+                final ArrayAdapter<Sensor> adapter = new ArrayAdapter<Sensor>(this, android.R.layout.simple_spinner_item, fullSensorList) {
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case PERMISSION_RESULT_CODE:
-                if (resultCode != RESULT_OK) {
-                    //Try to avoid an exception when saving by checking the result for the permission.
-                    saveToFile = false;
-                }
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        TextView sensorView;
+                        if (convertView == null) {
+                            sensorView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_spinner_item, parent, false);
+                            sensorView.setTextAppearance(getContext(), android.R.style.TextAppearance_DeviceDefault_Widget_ActionBar_Title);
+                        } else {
+                            sensorView = (TextView) convertView;
+                        }
+                        sensorView.setText(getItem(position).getName());
+                        return sensorView;
+                    }
+
+                    @Override
+                    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                        TextView sensorDropDownView;
+                        if (convertView == null) {
+                            sensorDropDownView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
+                        } else {
+                            sensorDropDownView = (TextView) convertView;
+                        }
+                        sensorDropDownView.setText(getItem(position).getName());
+                        return sensorDropDownView;
+                    }
+                };
+
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinner.setAdapter(adapter);
+                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                        Sensor sensor = adapter.getItem(position);
+                        onSensorClicked(sensor);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                });
+            } else {
+                actionBar.setDisplayShowTitleEnabled(true);
+                actionBar.setDisplayShowCustomEnabled(false);
+                //TODO Change title appearance in tablet mode.
+                //To make sure in tablet mode we start selected on a sensor.
+                onSensorClicked(fullSensorList.get(0));
+            }
         }
     }
 
     @Override
-    public void finish() {
-        if (saveToFile) {
-            prefs.edit().putBoolean(Constants.PREFS_KEY_PROX_SENSOR, ((Switch) findViewById(android.R.id.checkbox)).isChecked()).apply();
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(CURRENT_FRAGMENT);
+        getSupportFragmentManager().putFragment(outState, CURRENT_FRAGMENT, fragment);
+        if (spinner != null) {
+            outState.putInt(SELECTED_ITEM_POSITION, spinner.getSelectedItemPosition());
         }
-        super.finish();
+    }
+
+    @Override
+    public void onSensorClicked(Sensor sensor) {
+        SensorSettingsFragment fragment = SensorSettingsFragment.newInstance(sensor);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT)
+                .commit();
+        setTitle(sensor.getName());
     }
 }

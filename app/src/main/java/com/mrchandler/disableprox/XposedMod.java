@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.util.SparseArray;
 
 import com.mrchandler.disableprox.util.Constants;
+import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.Iterator;
 import java.util.List;
@@ -29,17 +30,9 @@ public class XposedMod implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(final LoadPackageParam lpparam)
             throws Throwable {
-        int enabledMethods = getMethodsUsedForDisabling();
-        if ((enabledMethods & Constants.ENABLE_METHOD_1) == Constants.ENABLE_METHOD_1) {
-            disableSystemSensorManager(lpparam);
-        }
-        //noinspection StatementWithEmptyBody
-        if ((enabledMethods & Constants.ENABLE_METHOD_2) == Constants.ENABLE_METHOD_2) {
-            //disableSensorEventListeners(lpparam);
-        }
-        if ((enabledMethods & Constants.ENABLE_METHOD_3) == Constants.ENABLE_METHOD_3) {
-            removeProximitySensor(lpparam);
-        }
+        disableSystemSensorManager(lpparam);
+        //disableSensorEventListeners(lpparam);
+        removeSensors(lpparam);
     }
 
     /**
@@ -61,58 +54,47 @@ public class XposedMod implements IXposedHookLoadPackage {
                     float[].class, long[].class, int.class, new XC_MethodHook() {
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
-                            //False == Turn Off, True == Leave On
-                            boolean proximitySensorStatus = getProximitySensorStatus();
-                            // This method receives the sensor that needs to be changed directly, making this code simpler than the JB MR2+ code.
-                            if (!proximitySensorStatus) { //This seems kinda weird but the proximity_enabled says whether the proximity sensor should be allowed to be enabled or not.
-                                Sensor s = (Sensor) param.args[0];
-                                if (s.getType() != Sensor.TYPE_PROXIMITY) {
-                                    return;
-                                }
+                            Sensor sensor = (Sensor) param.args[0];
+                            if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
                                 // So we grab that float[], set the maximum for the Proximity Sensor, and call it a day.
-                                float[] values = (float[]) param.args[1];
-                                values[0] = s.getMaximumRange();
-                                param.args[1] = values;
+                                float[] values = getSensorValues(sensor);
+                                System.arraycopy(values, 0, param.args[1], 0, values.length);
                             }
                         }
                     }
             );
         } else {
-            XC_MethodHook oldProximityHook = new XC_MethodHook() {
+            XC_MethodHook mockSensorHook = new XC_MethodHook() {
                 @SuppressWarnings("unchecked")
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param)
                         throws Throwable {
-                    boolean proximitySensorStatus = getProximitySensorStatus();
 
-                    if (!proximitySensorStatus) {
-                        // This pulls the 'Handle to Sensor' array straight from the SystemSensorManager class, so it should always pull the appropriate sensor.
-                        SparseArray<Sensor> sensors;
-                        //Marshmallow converted our field into a module level one, so we have different code based on that. Otherwise, the same.
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                            sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
-                        } else {
-                            Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
-                            sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
-                        }
+                    // This pulls the 'Handle to Sensor' array straight from the SystemSensorManager class, so it should always pull the appropriate sensor.
+                    SparseArray<Sensor> sensors;
+                    //Marshmallow converted our field into a module level one, so we have different code based on that. Otherwise, the same.
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                        sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
+                    } else {
+                        Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
+                        sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                    }
 
-                        // params.args[] is an array that holds the arguments that dispatchSensorEvent received, which are a handle pointing to a sensor
-                        // in sHandleToSensor and a float[] of values that should be applied to that sensor.
-                        int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
-                        Sensor sensor = sensors.get(handle);
-                        if (sensor.getType() == Sensor.TYPE_PROXIMITY) {
-                            float[] values = (float[]) param.args[1];
-                            for (int i = 0; i < values.length; i++) {
-                                //Even though only values[0] is checked, we do this just in case.
-                                //I worry that sensor.getMaximumRange() might not always be set, but I've seen no instance of that case.
-                                values[i] = sensor.getMaximumRange();
-                            }
-                            param.args[1] = values;
-                        }
+                    // params.args[] is an array that holds the arguments that dispatchSensorEvent received, which are a handle pointing to a sensor
+                    // in sHandleToSensor and a float[] of values that should be applied to that sensor.
+                    int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
+                    Sensor sensor = sensors.get(handle);
+                    if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
+                        float[] values = getSensorValues(sensor);
+                        /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
+                        and some sensors (looking at you, Proximity) only use one index in the array
+                        but still send along a length 3 array, so we copy here instead of replacing it
+                        outright. */
+                        System.arraycopy(values, 0, ((float[]) param.args[1]), 0, values.length);
                     }
                 }
             };
-            XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader, "dispatchSensorEvent", int.class, float[].class, int.class, long.class, oldProximityHook);
+            XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader, "dispatchSensorEvent", int.class, float[].class, int.class, long.class, mockSensorHook);
         }
     }
 
@@ -126,7 +108,7 @@ public class XposedMod implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Sensor sensor = (Sensor) param.args[1];
-                if (!getProximitySensorStatus() && sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
                     final SensorEventListener oldListener = (SensorEventListener) param.args[0];
                     if (oldListener instanceof InjectedSensorEventListener) {
                         return;
@@ -153,38 +135,49 @@ public class XposedMod implements IXposedHookLoadPackage {
     /**
      * Disable by removing the sensor data from the SensorManager. Apps will think the sensor does not exist.
      **/
-    void removeProximitySensor(LoadPackageParam lpparam) {
+    void removeSensors(LoadPackageParam lpparam) {
         //This is the base method that gets called whenever the sensors are queryed. All roads lead back to getFullSensorList!
         XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager", lpparam.classLoader, "getFullSensorList", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                if (!getProximitySensorStatus()) {
-                    List<Sensor> fullSensorList = (List<Sensor>) param.getResult();
-                    Iterator<Sensor> iterator = fullSensorList.iterator();
-                    while (iterator.hasNext()) {
-                        Sensor sensor = iterator.next();
-                        if (sensor.getType() == Sensor.TYPE_PROXIMITY) {
-                            iterator.remove();
-                        }
+                List<Sensor> fullSensorList = (List<Sensor>) param.getResult();
+                Iterator<Sensor> iterator = fullSensorList.iterator();
+                while (iterator.hasNext()) {
+                    Sensor sensor = iterator.next();
+                    if (getSensorStatus(sensor) == Constants.REMOVE_SENSOR) {
+                        iterator.remove();
                     }
-                    param.setResult(fullSensorList);
                 }
+                param.setResult(fullSensorList);
+
             }
         });
     }
 
-    boolean getProximitySensorStatus() {
-        //False == Turn Off, True == Leave On
-        //Always assume that the user wants it disabled. They can disable the app if we fail somehow.
+    int getSensorStatus(Sensor sensor) {
+        //Always assume that the user wants the app to do nothing, since this accesses every sensor.
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
-        XSharedPreferences sharedPreferences = new XSharedPreferences("com.mrchandler.disableprox");
-        return sharedPreferences.getBoolean(Constants.PREFS_KEY_PROX_SENSOR, false);
-
+        XSharedPreferences sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
+        String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
+        return sharedPreferences.getInt(enabledStatusKey, Constants.DO_NOTHING);
     }
 
-    //TODO Implement a visual system for this so users can pick which method.
-    int getMethodsUsedForDisabling() {
-        return Constants.ENABLE_METHOD_1;
+    float[] getSensorValues(Sensor sensor) {
+        XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
+        XSharedPreferences sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
+        String mockValuesKey = SensorUtil.generateUniqueSensorKey(sensor) + "_values";
+        String[] mockValuesStrings;
+        if (sharedPreferences.contains(mockValuesKey)) {
+            mockValuesStrings = sharedPreferences.getString(mockValuesKey, "").split(":", 0);
+        } else {
+            return new float[0];
+        }
+
+        float[] mockValuesFloats = new float[mockValuesStrings.length];
+        for (int i = 0; i < mockValuesStrings.length; i++) {
+            mockValuesFloats[i] = Float.parseFloat(mockValuesStrings[i]);
+        }
+        return mockValuesFloats;
     }
 
     /**

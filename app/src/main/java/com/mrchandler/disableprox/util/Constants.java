@@ -42,12 +42,14 @@ public final class Constants {
      */
     public static final boolean IS_CORRECT_THREAD_CHECKING_ENABLED = BuildConfig.DEBUG;
     public static final String SKU_TASKER = "tasker_purchase";
+    public static final String PREFS_FILE_NAME = "com.mrchandler.disableprox_preferences";
+    public static final String PREFS_PACKAGE = "com.mrchandler.disableprox";
     public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
     public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
     public static final String PREFS_KEY_PROX_SENSOR = "prefs_key_prox_sensor";
-    public static final int ENABLE_METHOD_1 = 1;
-    public static final int ENABLE_METHOD_2 = 2;
-    public static final int ENABLE_METHOD_3 = 4;
+    public static final int DO_NOTHING = 0;
+    public static final int REMOVE_SENSOR = 1;
+    public static final int MOCK_VALUES = 2;
 
     /**
      * Determines the "versionCode" in the {@code AndroidManifest}.

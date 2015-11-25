@@ -31,5 +31,93 @@
     <string name="iap_dialog_more_information">If you would like to use this feature without paying for it, open up the module
         settings in the Xposed Installer application and long click the Proximity Sensor switch.
     </string>
+    <string name="menu_reset">Reset</string>
+    <string name="menu_info">Info</string>
+    <string name="menu_save">Save</string>
+    <string name="do_nothing_radio_button">Do nothing</string>
+    <string name="remove_sensor_radio_button">Remove sensor</string>
+    <string name="mock_sensor_radio_button">Mock sensor values</string>
+    <string-array name="accelerometer_values">
+        <item>Acceleration X (m/s^2):</item>
+        <item>Acceleration Y (m/s^2):</item>
+        <item>Acceleration Z (m/s^2):</item>
+    </string-array>
+    <string-array name="magnetic_values">
+        <item>Magnetic Field X (uT):</item>
+        <item>Magnetic Field Y (uT):</item>
+        <item>Magnetic Field Z (uT):</item>
+    </string-array>
+    <string-array name="gyroscore_values">
+        <item>Angular Speed X (radians/second):</item>
+        <item>Angular Speed Y (radians/second):</item>
+        <item>Angular Speed Z (radians/second):</item>
+    </string-array>
+    <string-array name="light_values">
+        <item>Light Level (lux):</item>
+    </string-array>
+    <string-array name="pressure_values">
+        <item>Pressure (hPa):</item>
+    </string-array>
+    <string-array name="proximity_values">
+        <item>Distance (cm):</item>
+    </string-array>
+    <string-array name="gravity_values">
+        <item>X (m/s^2):</item>
+        <item>Y (m/s^2):</item>
+        <item>Z (m/s^2):</item>
+    </string-array>
+    <string-array name="linear_acceleration_values">
+        <item>X (m/s^2):</item>
+        <item>Y (m/s^2):</item>
+        <item>Z (m/s^2):</item>
+    </string-array>
+    <string-array name="rotation_vector_values">
+        <item>x*sin(θ/2):</item>
+        <item>y*sin(θ/2):</item>
+        <item>z*sin(θ/2):</item>
+        <item>cos(θ)</item>
+        <item>Heading Accuracy (radians):</item>
+    </string-array>
+    <string-array name="orientation_values">
+        <item>Azimuth (°):</item>
+        <item>Pitch (°):</item>
+        <item>Roll (°):</item>
+    </string-array>
+    <string-array name="relative_humidity_values">
+        <item>Relative Humidity (%):</item>
+    </string-array>
+    <string-array name="ambient_temperature_values">
+        <item>Ambient Temperature (°C):</item>
+    </string-array>
+    <string-array name="magnetic_field_uncalibrated_values">
+        <item>x_uncalib (ut)</item>
+        <item>y_uncalib (ut)</item>
+        <item>z_uncalib (ut)</item>
+        <item>x_bias (ut)</item>
+        <item>y_bias (ut)</item>
+        <item>z_bias (ut)</item>
+    </string-array>
+    <string-array name="game_rotation_vector_values">
+        <item>x*sin(θ/2):</item>
+        <item>y*sin(θ/2):</item>
+        <item>z*sin(θ/2):</item>
+        <item>cos(θ)</item>
+        <item>Heading Accuracy (radians):</item>
+    </string-array>
+    <string-array name="gyroscore_uncalibrated_values">
+        <item>Angular Speed X (radians/second):</item>
+        <item>Angular Speed Y (radians/second):</item>
+        <item>Angular Speed Z (radians/second):</item>
+        <item>Estimated Drift X (radians/second):</item>
+        <item>Estimated Drift Y (radians/second):</item>
+        <item>Estimated Drift Z (radians/second):</item>
+    </string-array>
+    <string-array name="heart_rate_values">
+        <item>Heart Rate (beats/minutes):</item>
+    </string-array>
+    <string-array name="step_counter_values">
+        <item>Steps (steps since last reboot):</item>
+    </string-array>
+
 
 </resources>

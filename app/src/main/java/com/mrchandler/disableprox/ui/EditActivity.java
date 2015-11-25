@@ -12,15 +12,11 @@
 
 package com.mrchandler.disableprox.ui;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -76,7 +72,7 @@ public final class EditActivity extends AbstractPluginActivity {
             }
         }
         final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
-        final SharedPreferences prefs = getSharedPreferences("com.mrchandler.disableprox_preferences", MODE_WORLD_READABLE);
+        final SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
         //Has the user purchased the Tasker IAP?
         if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
@@ -84,7 +80,6 @@ public final class EditActivity extends AbstractPluginActivity {
                 public void onIabSetupFinished(IabResult result) {
                     if (result.isFailure()) {
                         Log.d(TAG, "Unable to get up In-App Billing. Oh well.");
-                        queryPermission();
                         return;
                     }
                     helper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
@@ -92,13 +87,11 @@ public final class EditActivity extends AbstractPluginActivity {
                         public void onQueryInventoryFinished(IabResult result, Inventory inv) {
                             if (result.isFailure()) {
                                 prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
-                                queryPermission();
                                 return;
                             }
                             if (inv.hasPurchase(Constants.SKU_TASKER)) {
                                 prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
                                 prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
-                                queryPermission();
                             } else {
                                 prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
                                 if (!(prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false))) {
@@ -126,7 +119,6 @@ public final class EditActivity extends AbstractPluginActivity {
                                                             }
                                                             if (info.getSku().equals(Constants.SKU_TASKER)) {
                                                                 prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
-                                                                queryPermission();
                                                             }
                                                         }
                                                     });
@@ -164,16 +156,12 @@ public final class EditActivity extends AbstractPluginActivity {
                                             .create();
                                     dialog.setCanceledOnTouchOutside(true);
                                     dialog.show();
-                                } else {
-                                    queryPermission();
                                 }
                             }
                         }
                     });
                 }
             });
-        } else {
-            queryPermission();
         }
     }
 
@@ -232,37 +220,5 @@ public final class EditActivity extends AbstractPluginActivity {
     /* package */
     static String generateBlurb(final boolean setting) {
         return setting ? "Enabled" : "Disabled";
-    }
-
-    void queryPermission() {
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-
-                new AlertDialog.Builder(this)
-                        .setMessage("In order to allow Tasker the ability to change the proximity sensor setting, this app needs to save the settings to a file. \n\nWill you allow this app to save data on this phone's storage? Without this, Tasker will not work.")
-                        .setPositiveButton("Yes, that's fine.", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ActivityCompat.requestPermissions(EditActivity.this,
-                                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                        PERMISSION_RESULT_CODE);
-                            }
-                        })
-                        .setNegativeButton("No, I'd rather not.", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                        .setCancelable(false)
-                        .create().show();
-            } else {
-                //We can ignore the result code since this Activity doesn't actually need it.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        PERMISSION_RESULT_CODE);
-            }
-        }
     }
 }
