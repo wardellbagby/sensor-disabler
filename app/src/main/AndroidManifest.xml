@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.mrchandler.disableprox"
-    android:versionCode="5"
-    android:versionName="1.1.1">
+    android:versionCode="6"
+    android:versionName="2.0">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -47,13 +47,6 @@
                 <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
             </intent-filter>
         </activity>
-        <!--
-             This is the "fire" BroadcastReceiver. Note that Locale will reject plug-in BroadcastReceivers for the following reasons:
-                - The BroadcastReceiver isn't exported (e.g. android:exported="false")
-                - The BroadcastReceiver isn't enabled (e.g. android:enabled="false")
-                - The BroadcastReceiver requires permissions not available to Locale
-                - There are multiple BroadcastReceivers for com.twofortyfouram.locale.intent.action.FIRE_SETTING
-        -->
         <receiver
             android:name=".receiver.FireReceiver"
             android:exported="true"

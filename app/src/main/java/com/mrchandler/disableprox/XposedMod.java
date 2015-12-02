@@ -11,10 +11,13 @@ import android.util.SparseArray;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.SensorUtil;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedHelpers;
@@ -22,11 +25,19 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
-public class XposedMod implements IXposedHookLoadPackage {
+public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+    private static XSharedPreferences sharedPreferences;
 
     /**
      * Shout out to abusalimov for his Light Sensor fix that inspired this app.
      */
+
+    @Override
+    public void initZygote(StartupParam startupParam) throws Throwable {
+        sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
+        sharedPreferences.makeWorldReadable();
+    }
+
     @Override
     public void handleLoadPackage(final LoadPackageParam lpparam)
             throws Throwable {
@@ -56,8 +67,10 @@ public class XposedMod implements IXposedHookLoadPackage {
                         protected void beforeHookedMethod(MethodHookParam param) {
                             Sensor sensor = (Sensor) param.args[0];
                             if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
-                                // So we grab that float[], set the maximum for the Proximity Sensor, and call it a day.
+                                // Get the mock values from the settings.
                                 float[] values = getSensorValues(sensor);
+
+                                //noinspection SuspiciousSystemArraycopy
                                 System.arraycopy(values, 0, param.args[1], 0, values.length);
                             }
                         }
@@ -90,7 +103,9 @@ public class XposedMod implements IXposedHookLoadPackage {
                         and some sensors (looking at you, Proximity) only use one index in the array
                         but still send along a length 3 array, so we copy here instead of replacing it
                         outright. */
-                        System.arraycopy(values, 0, ((float[]) param.args[1]), 0, values.length);
+
+                        //noinspection SuspiciousSystemArraycopy
+                        System.arraycopy(values, 0, param.args[1], 0, values.length);
                     }
                 }
             };
@@ -135,21 +150,24 @@ public class XposedMod implements IXposedHookLoadPackage {
     /**
      * Disable by removing the sensor data from the SensorManager. Apps will think the sensor does not exist.
      **/
-    void removeSensors(LoadPackageParam lpparam) {
-        //This is the base method that gets called whenever the sensors are queryed. All roads lead back to getFullSensorList!
+    void removeSensors(final LoadPackageParam lpparam) {
+        //This is the base method that gets called whenever the sensors are queried. All roads lead back to getFullSensorList!
         XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager", lpparam.classLoader, "getFullSensorList", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                List<Sensor> fullSensorList = (List<Sensor>) param.getResult();
-                Iterator<Sensor> iterator = fullSensorList.iterator();
-                while (iterator.hasNext()) {
-                    Sensor sensor = iterator.next();
-                    if (getSensorStatus(sensor) == Constants.REMOVE_SENSOR) {
-                        iterator.remove();
+                //Without this, you'd never be able to edit the values for a removed sensor! Aaah!
+                if (!lpparam.packageName.equals(Constants.PREFS_PACKAGE)) {
+                    //Create a new list so we don't modify the original list.
+                    @SuppressWarnings("unchecked") List<Sensor> fullSensorList = new ArrayList<>((Collection<? extends Sensor>) param.getResult());
+                    Iterator<Sensor> iterator = fullSensorList.iterator();
+                    while (iterator.hasNext()) {
+                        Sensor sensor = iterator.next();
+                        if (getSensorStatus(sensor) == Constants.REMOVE_SENSOR) {
+                            iterator.remove();
+                        }
                     }
+                    param.setResult(fullSensorList);
                 }
-                param.setResult(fullSensorList);
-
             }
         });
     }
@@ -157,16 +175,16 @@ public class XposedMod implements IXposedHookLoadPackage {
     int getSensorStatus(Sensor sensor) {
         //Always assume that the user wants the app to do nothing, since this accesses every sensor.
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
-        XSharedPreferences sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
         String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
+        sharedPreferences.reload();
         return sharedPreferences.getInt(enabledStatusKey, Constants.DO_NOTHING);
     }
 
     float[] getSensorValues(Sensor sensor) {
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
-        XSharedPreferences sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
         String mockValuesKey = SensorUtil.generateUniqueSensorKey(sensor) + "_values";
         String[] mockValuesStrings;
+        sharedPreferences.reload();
         if (sharedPreferences.contains(mockValuesKey)) {
             mockValuesStrings = sharedPreferences.getString(mockValuesKey, "").split(":", 0);
         } else {
