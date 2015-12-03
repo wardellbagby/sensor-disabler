@@ -22,35 +22,21 @@ import com.mrchandler.disableprox.util.Constants;
  * Class for managing the {@link com.twofortyfouram.locale.Intent#EXTRA_BUNDLE} for this plug-in.
  */
 public final class PluginBundleManager {
-    /**
-     * Type: {@code String}.
-     * <p/>
-     * String message to display in a Toast message.
-     */
 
-    public static final String BUNDLE_EXTRA_BOOLEAN_SETTING = "com.mrchandler.disableprox.extra.PROX_SETTING";
+    public static final String BUNDLE_EXTRA_SENSOR_STATUS_KEY = "com.mrchandler.disableprox.extra.SENSOR_STATUS_KEY";
+    public static final String BUNDLE_EXTRA_SENSOR_STATUS_VALUE = "com.mrchandler.disableprox.extra.SENSOR_STATUS_VALUE";
+    public static final String BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY = "com.mrchandler.disableprox.extra.SENSOR_VALUE_KEY";
+    public static final String BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES = "com.mrchandler.disableprox.extra.SENSOR_VALUE_VALUE";
 
-    /**
-     * Type: {@code int}.
-     * <p/>
-     * versionCode of the plug-in that saved the Bundle.
-     */
+
     /*
      * This extra is not strictly required, however it makes backward and forward compatibility significantly
      * easier. For example, suppose a bug is found in how some version of the plug-in stored its Bundle. By
      * having the version, the plug-in can better detect when such bugs occur.
      */
     public static final String BUNDLE_EXTRA_INT_VERSION_CODE =
-            "com.yourcompany.yourcondition.extra.INT_VERSION_CODE"; //$NON-NLS-1$
+            "com.mrchandler.disableprox.extra.INT_VERSION_CODE";
 
-    /**
-     * Method to verify the content of the bundle are correct.
-     * <p/>
-     * This method will not mutate {@code bundle}.
-     *
-     * @param bundle bundle to verify. May be null, which will always return false.
-     * @return true if the Bundle is valid, false if the bundle is invalid.
-     */
     public static boolean isBundleValid(final Bundle bundle) {
         if (null == bundle) {
             return false;
@@ -59,10 +45,31 @@ public final class PluginBundleManager {
         /*
          * Make sure the expected extras exist
          */
-        if (!bundle.containsKey(BUNDLE_EXTRA_BOOLEAN_SETTING)) {
+        if (!bundle.containsKey(BUNDLE_EXTRA_SENSOR_STATUS_KEY)) {
             if (Constants.IS_LOGGABLE) {
                 Log.e(Constants.LOG_TAG,
-                        String.format("bundle must contain extra %s", BUNDLE_EXTRA_BOOLEAN_SETTING)); //$NON-NLS-1$
+                        String.format("bundle must contain extra %s", BUNDLE_EXTRA_SENSOR_STATUS_KEY)); //$NON-NLS-1$
+            }
+            return false;
+        }
+        if (!bundle.containsKey(BUNDLE_EXTRA_SENSOR_STATUS_VALUE)) {
+            if (Constants.IS_LOGGABLE) {
+                Log.e(Constants.LOG_TAG,
+                        String.format("bundle must contain extra %s", BUNDLE_EXTRA_SENSOR_STATUS_VALUE)); //$NON-NLS-1$
+            }
+            return false;
+        }
+        if (!bundle.containsKey(BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY)) {
+            if (Constants.IS_LOGGABLE) {
+                Log.e(Constants.LOG_TAG,
+                        String.format("bundle must contain extra %s", BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY)); //$NON-NLS-1$
+            }
+            return false;
+        }
+        if (!bundle.containsKey(BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES)) {
+            if (Constants.IS_LOGGABLE) {
+                Log.e(Constants.LOG_TAG,
+                        String.format("bundle must contain extra %s", BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES)); //$NON-NLS-1$
             }
             return false;
         }
@@ -79,35 +86,35 @@ public final class PluginBundleManager {
          * extras above so that the error message is more useful. (E.g. the caller will see what extras are
          * missing, rather than just a message that there is the wrong number).
          */
-        if (2 != bundle.keySet().size()) {
+        if (5 != bundle.keySet().size()) {
             if (Constants.IS_LOGGABLE) {
                 Log.e(Constants.LOG_TAG,
-                        String.format("bundle must contain 2 keys, but currently contains %d keys: %s", bundle.keySet().size(), bundle.keySet())); //$NON-NLS-1$
+                        String.format("bundle must contain 5 keys, but currently contains %d keys: %s", bundle.keySet().size(), bundle.keySet())); //$NON-NLS-1$
             }
             return false;
         }
 
-        if (bundle.getInt(BUNDLE_EXTRA_INT_VERSION_CODE, 0) != bundle.getInt(BUNDLE_EXTRA_INT_VERSION_CODE, 1)) {
-            if (Constants.IS_LOGGABLE) {
-                Log.e(Constants.LOG_TAG,
-                        String.format("bundle extra %s appears to be the wrong type.  It must be an int", BUNDLE_EXTRA_INT_VERSION_CODE)); //$NON-NLS-1$
-            }
-
-            return false;
-        }
+        //If version checking is ever implemented, this could be useful.
+//        if (bundle.getInt(BUNDLE_EXTRA_INT_VERSION_CODE, 0) != bundle.getInt(BUNDLE_EXTRA_INT_VERSION_CODE, 1)) {
+//            if (Constants.IS_LOGGABLE) {
+//                Log.e(Constants.LOG_TAG,
+//                        String.format("bundle extra %s appears to be the wrong type.  It must be an int", BUNDLE_EXTRA_INT_VERSION_CODE)); //$NON-NLS-1$
+//            }
+//
+//            return false;
+//        }
 
         return true;
     }
 
-    /**
-     * @param context Application context.
-     * @param setting The toast message to be displayed by the plug-in. Cannot be null.
-     * @return A plug-in bundle.
-     */
-    public static Bundle generateBundle(final Context context, final boolean setting) {
+
+    public static Bundle generateBundle(final Context context, String sensorKey, int sensorValue, String sensorValueKey, float[] sensorMockValues) {
         final Bundle result = new Bundle();
         result.putInt(BUNDLE_EXTRA_INT_VERSION_CODE, Constants.getVersionCode(context));
-        result.putBoolean(BUNDLE_EXTRA_BOOLEAN_SETTING, setting);
+        result.putString(BUNDLE_EXTRA_SENSOR_STATUS_KEY, sensorKey);
+        result.putInt(BUNDLE_EXTRA_SENSOR_STATUS_VALUE, sensorValue);
+        result.putString(BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY, sensorValueKey);
+        result.putFloatArray(BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES, sensorMockValues);
         return result;
     }
 

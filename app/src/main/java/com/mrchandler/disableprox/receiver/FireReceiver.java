@@ -12,18 +12,16 @@
 
 package com.mrchandler.disableprox.receiver;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.mrchandler.disableprox.bundle.BundleScrubber;
 import com.mrchandler.disableprox.bundle.PluginBundleManager;
+import com.mrchandler.disableprox.ui.TaskerEditActivity;
 import com.mrchandler.disableprox.util.Constants;
 
 import java.util.Locale;
@@ -40,7 +38,7 @@ public final class FireReceiver extends BroadcastReceiver {
      * @param context {@inheritDoc}.
      * @param intent  the incoming {@link com.twofortyfouram.locale.Intent#ACTION_FIRE_SETTING} Intent. This
      *                should contain the {@link com.twofortyfouram.locale.Intent#EXTRA_BUNDLE} that was saved by
-     *                {@link com.mrchandler.disableprox.ui.EditActivity} and later broadcast by Locale.
+     *                {@link TaskerEditActivity} and later broadcast by Locale.
      */
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -62,15 +60,19 @@ public final class FireReceiver extends BroadcastReceiver {
         BundleScrubber.scrub(bundle);
 
         if (PluginBundleManager.isBundleValid(bundle)) {
-            final boolean setting = bundle.getBoolean(PluginBundleManager.BUNDLE_EXTRA_BOOLEAN_SETTING);
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                //Can't save without permissions and Broadcast Receivers can't use that nice Permission dialog. :(
-                Log.e(Constants.LOG_TAG, "The Tasker Receiver does not have permission to write to storage.");
-
-            } else {
-                SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
-                prefs.edit().putBoolean(Constants.PREFS_KEY_PROX_SENSOR, setting).apply();
+            String sensorStatusKey = bundle.getString(PluginBundleManager.BUNDLE_EXTRA_SENSOR_STATUS_KEY);
+            int sensorStatusValue = bundle.getInt(PluginBundleManager.BUNDLE_EXTRA_SENSOR_STATUS_VALUE);
+            String sensorValueKey = bundle.getString(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY);
+            float[] sensorMockValues = bundle.getFloatArray(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES);
+            String sensorMockValuesString = "";
+            for (float value : sensorMockValues) {
+                sensorMockValuesString += value + ":";
             }
+            SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+            prefs.edit().putInt(sensorStatusKey, sensorStatusValue)
+                    .putString(sensorValueKey, sensorMockValuesString)
+                    .apply();
+
         }
     }
 }

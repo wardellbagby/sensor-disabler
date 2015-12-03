@@ -34,7 +34,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        sharedPreferences = new XSharedPreferences(Constants.PREFS_PACKAGE);
+        sharedPreferences = new XSharedPreferences(Constants.PACKAGE_NAME);
         sharedPreferences.makeWorldReadable();
     }
 
@@ -66,7 +66,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
                             Sensor sensor = (Sensor) param.args[0];
-                            if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
+                            if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                                 // Get the mock values from the settings.
                                 float[] values = getSensorValues(sensor);
 
@@ -97,7 +97,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     // in sHandleToSensor and a float[] of values that should be applied to that sensor.
                     int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                     Sensor sensor = sensors.get(handle);
-                    if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
+                    if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                         float[] values = getSensorValues(sensor);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
                         and some sensors (looking at you, Proximity) only use one index in the array
@@ -123,7 +123,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 Sensor sensor = (Sensor) param.args[1];
-                if (getSensorStatus(sensor) == Constants.MOCK_VALUES) {
+                if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                     final SensorEventListener oldListener = (SensorEventListener) param.args[0];
                     if (oldListener instanceof InjectedSensorEventListener) {
                         return;
@@ -156,13 +156,13 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 //Without this, you'd never be able to edit the values for a removed sensor! Aaah!
-                if (!lpparam.packageName.equals(Constants.PREFS_PACKAGE)) {
+                if (!lpparam.packageName.equals(Constants.PACKAGE_NAME)) {
                     //Create a new list so we don't modify the original list.
                     @SuppressWarnings("unchecked") List<Sensor> fullSensorList = new ArrayList<>((Collection<? extends Sensor>) param.getResult());
                     Iterator<Sensor> iterator = fullSensorList.iterator();
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
-                        if (getSensorStatus(sensor) == Constants.REMOVE_SENSOR) {
+                        if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
                             iterator.remove();
                         }
                     }
@@ -176,14 +176,21 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         //Always assume that the user wants the app to do nothing, since this accesses every sensor.
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
         String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
+        if (sharedPreferences == null) {
+            //Not sure if Xposed Modules suffer from the same "static variables becoming null" problem as the rest of Android, but just in case.
+            sharedPreferences = new XSharedPreferences(Constants.PREFS_FILE_NAME);
+        }
         sharedPreferences.reload();
-        return sharedPreferences.getInt(enabledStatusKey, Constants.DO_NOTHING);
+        return sharedPreferences.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
     }
 
     float[] getSensorValues(Sensor sensor) {
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
-        String mockValuesKey = SensorUtil.generateUniqueSensorKey(sensor) + "_values";
+        String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
         String[] mockValuesStrings;
+        if (sharedPreferences == null) {
+            sharedPreferences = new XSharedPreferences(Constants.PREFS_FILE_NAME);
+        }
         sharedPreferences.reload();
         if (sharedPreferences.contains(mockValuesKey)) {
             mockValuesStrings = sharedPreferences.getString(mockValuesKey, "").split(":", 0);

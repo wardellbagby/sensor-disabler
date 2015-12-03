@@ -48,7 +48,6 @@ public class SensorSettingsFragment extends Fragment {
         //Sensors aren't parcelable or serializable, so we have to do this. I hate it.
         bundle.putString(UNIQUE_SENSOR_KEY, SensorUtil.generateUniqueSensorKey(sensor));
         fragment.setArguments(bundle);
-        fragment.setHasOptionsMenu(true);
         return fragment;
     }
 
@@ -163,23 +162,11 @@ public class SensorSettingsFragment extends Fragment {
     protected void saveToPrefs() {
         if (getContext() != null) {
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
-            int enabledStatusValue;
-            String mockValuesKey = SensorUtil.generateUniqueSensorKey(sensor) + "_values";
+            int enabledStatusValue = getSensorStatus();
+            String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
             String mockValuesValues = "";
             for (float value : getValues()) {
                 mockValuesValues += value + ":";
-            }
-            switch (radioGroup.getCheckedRadioButtonId()) {
-                default:
-                case R.id.do_nothing_radio_button:
-                    enabledStatusValue = Constants.DO_NOTHING;
-                    break;
-                case R.id.remove_sensor_radio_button:
-                    enabledStatusValue = Constants.REMOVE_SENSOR;
-                    break;
-                case R.id.mock_sensor_values_radio_button:
-                    enabledStatusValue = Constants.MOCK_VALUES;
-                    break;
             }
             SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
             prefs.edit()
@@ -194,8 +181,8 @@ public class SensorSettingsFragment extends Fragment {
         if (getContext() != null) {
             SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
-            String mockValuesKey = SensorUtil.generateUniqueSensorKey(sensor) + "_values";
-            int enabledStatus = prefs.getInt(enabledStatusKey, Constants.DO_NOTHING);
+            String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
+            int enabledStatus = prefs.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
             //TODO Check for existence in prefs before creating a default.
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < valueSettings.size(); i++) {
@@ -217,13 +204,13 @@ public class SensorSettingsFragment extends Fragment {
             }
             switch (enabledStatus) {
                 default:
-                case Constants.DO_NOTHING:
+                case Constants.SENSOR_STATUS_DO_NOTHING:
                     radioGroup.check(R.id.do_nothing_radio_button);
                     break;
-                case Constants.REMOVE_SENSOR:
+                case Constants.SENSOR_STATUS_REMOVE_SENSOR:
                     radioGroup.check(R.id.remove_sensor_radio_button);
                     break;
-                case Constants.MOCK_VALUES:
+                case Constants.SENSOR_STATUS_MOCK_VALUES:
                     radioGroup.check(R.id.mock_sensor_values_radio_button);
                     break;
             }
@@ -245,9 +232,27 @@ public class SensorSettingsFragment extends Fragment {
         return values;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        setHasOptionsMenu(true);
+    }
+
     public void setValues(float[] values) {
         for (int i = 0; i < valueSettings.size(); i++) {
             valueSettings.get(i).setProgress((int) (values[i] * 10));
+        }
+    }
+
+    public int getSensorStatus() {
+        switch (radioGroup.getCheckedRadioButtonId()) {
+            default:
+            case R.id.do_nothing_radio_button:
+                return Constants.SENSOR_STATUS_DO_NOTHING;
+            case R.id.remove_sensor_radio_button:
+                return Constants.SENSOR_STATUS_REMOVE_SENSOR;
+            case R.id.mock_sensor_values_radio_button:
+                return Constants.SENSOR_STATUS_MOCK_VALUES;
         }
     }
 }

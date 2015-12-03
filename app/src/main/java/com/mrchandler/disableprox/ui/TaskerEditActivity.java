@@ -15,10 +15,8 @@ package com.mrchandler.disableprox.ui;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.mrchandler.disableprox.R;
@@ -29,6 +27,9 @@ import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
 import com.mrchandler.disableprox.util.Purchase;
+import com.mrchandler.disableprox.util.SensorUtil;
+
+import java.util.Arrays;
 
 /**
  * This is the "Edit" activity for a Locale Plug-in.
@@ -45,34 +46,26 @@ import com.mrchandler.disableprox.util.Purchase;
  * @see com.twofortyfouram.locale.Intent#ACTION_EDIT_SETTING
  * @see com.twofortyfouram.locale.Intent#EXTRA_BUNDLE
  */
-public final class EditActivity extends AbstractPluginActivity {
+public final class TaskerEditActivity extends SettingsActivity {
 
-    private static final String TAG = EditActivity.class.getSimpleName();
+    private static final String TAG = TaskerEditActivity.class.getSimpleName();
     private static final int PURCHASE_RESULT_CODE = 191;
-    private static final int PERMISSION_RESULT_CODE = 192;
 
     private boolean doNotSave = false;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         BundleScrubber.scrub(getIntent());
-
         final Bundle localeBundle = getIntent().getBundleExtra(com.twofortyfouram.locale.Intent.EXTRA_BUNDLE);
         BundleScrubber.scrub(localeBundle);
 
-        setContentView(R.layout.main);
-
         if (null == savedInstanceState) {
             if (PluginBundleManager.isBundleValid(localeBundle)) {
-                final boolean setting =
-                        localeBundle.getBoolean(PluginBundleManager.BUNDLE_EXTRA_BOOLEAN_SETTING);
-                ((Switch) findViewById(android.R.id.checkbox)).setChecked(setting);
+                //Init state
             }
         }
         final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
-        final SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
         //Has the user purchased the Tasker IAP?
         if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
@@ -95,7 +88,7 @@ public final class EditActivity extends AbstractPluginActivity {
                             } else {
                                 prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
                                 if (!(prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false))) {
-                                    AlertDialog dialog = new AlertDialog.Builder(EditActivity.this)
+                                    AlertDialog dialog = new AlertDialog.Builder(TaskerEditActivity.this)
                                             .setTitle(R.string.iap_dialog_title)
                                             .setMessage(R.string.iap_dialog_message)
                                             .setNegativeButton("Not Right Now", new DialogInterface.OnClickListener() {
@@ -108,11 +101,11 @@ public final class EditActivity extends AbstractPluginActivity {
                                             .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
-                                                    helper.launchPurchaseFlow(EditActivity.this, Constants.SKU_TASKER, PURCHASE_RESULT_CODE, new IabHelper.OnIabPurchaseFinishedListener() {
+                                                    helper.launchPurchaseFlow(TaskerEditActivity.this, Constants.SKU_TASKER, PURCHASE_RESULT_CODE, new IabHelper.OnIabPurchaseFinishedListener() {
                                                         @Override
                                                         public void onIabPurchaseFinished(IabResult result, Purchase info) {
                                                             if (result.isFailure()) {
-                                                                Toast.makeText(EditActivity.this, "Error getting purchase details.", Toast.LENGTH_SHORT).show();
+                                                                Toast.makeText(TaskerEditActivity.this, "Error getting purchase details.", Toast.LENGTH_SHORT).show();
                                                                 doNotSave = true;
                                                                 finish();
                                                                 return;
@@ -129,7 +122,7 @@ public final class EditActivity extends AbstractPluginActivity {
                                                 public void onClick(DialogInterface dialog, int which) {
                                                     AlertDialog oldDialog = (AlertDialog) dialog;
                                                     oldDialog.dismiss();
-                                                    AlertDialog newDialog = new AlertDialog.Builder(EditActivity.this)
+                                                    AlertDialog newDialog = new AlertDialog.Builder(TaskerEditActivity.this)
                                                             .setTitle(getString(R.string.iap_dialog_title))
                                                             .setMessage(getString(R.string.iap_dialog_more_information))
                                                             .setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -183,42 +176,41 @@ public final class EditActivity extends AbstractPluginActivity {
 
     @Override
     public void finish() {
-        if (!isCanceled() && !doNotSave) {
-            final boolean setting = ((Switch) findViewById(android.R.id.checkbox)).isChecked();
-
+        if (!doNotSave) {
             final Intent resultIntent = new Intent();
-
-                /*
-                 * This extra is the data to ourselves: either for the Activity or the BroadcastReceiver. Note
-                 * that anything placed in this Bundle must be available to Locale's class loader. So storing
-                 * String, int, and other standard objects will work just fine. Parcelable objects are not
-                 * acceptable, unless they also implement Serializable. Serializable objects must be standard
-                 * Android platform objects (A Serializable class private to this plug-in's APK cannot be
-                 * stored in the Bundle, as Locale's classloader will not recognize it).
-                 */
             final Bundle resultBundle =
-                    PluginBundleManager.generateBundle(getApplicationContext(), setting);
+                    PluginBundleManager.generateBundle(getApplicationContext(),
+                            SensorUtil.generateUniqueSensorKey(getCurrentShowingSensor()),
+                            getCurrentSensorStatus(),
+                            SensorUtil.generateUniqueSensorMockValuesKey(getCurrentShowingSensor()),
+                            getCurrentMockValues());
             resultIntent.putExtra(com.twofortyfouram.locale.Intent.EXTRA_BUNDLE, resultBundle);
-
-                /*
-                 * The blurb is concise status text to be displayed in the host's UI.
-                 */
-            final String blurb = generateBlurb(setting);
+            final String blurb = generateBlurb();
             resultIntent.putExtra(com.twofortyfouram.locale.Intent.EXTRA_STRING_BLURB, blurb);
-
             setResult(RESULT_OK, resultIntent);
-
         }
-
         super.finish();
     }
 
-    /**
-     * @param setting The new setting for the Proximity sensor.
-     * @return A blurb for the plug-in.
-     */
-    /* package */
-    static String generateBlurb(final boolean setting) {
-        return setting ? "Enabled" : "Disabled";
+    String generateBlurb() {
+        StringBuilder builder = new StringBuilder(getCurrentShowingSensor().getName());
+        builder.append(" is set to ");
+        switch (getCurrentSensorStatus()) {
+            case Constants.SENSOR_STATUS_DO_NOTHING:
+                builder.append("do nothing.");
+                break;
+            case Constants.SENSOR_STATUS_REMOVE_SENSOR:
+                builder.append("be removed.");
+                break;
+            case Constants.SENSOR_STATUS_MOCK_VALUES:
+                builder.append("mock values. New values are: ");
+                builder.append(Arrays.toString(getCurrentMockValues()));
+                break;
+            default:
+                builder.append("an unknown state. State = ");
+                builder.append(getCurrentSensorStatus());
+                break;
+        }
+        return builder.toString();
     }
 }

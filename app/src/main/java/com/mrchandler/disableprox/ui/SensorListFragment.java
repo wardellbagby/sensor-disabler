@@ -58,6 +58,15 @@ public class SensorListFragment extends ListFragment {
     }
 
     @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        ListView listView = getListView();
+        listView.setDivider(null);
+        listView.setScrollbarFadingEnabled(false);
+
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;

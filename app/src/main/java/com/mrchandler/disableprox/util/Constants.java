@@ -16,40 +16,22 @@ import android.content.Context;
 
 import com.mrchandler.disableprox.BuildConfig;
 
-/**
- * Class of constants used by this Locale plug-in.
- */
 public final class Constants {
 
-    /**
-     * Log tag for logcat messages.
-     */
-    // TODO: Change this to your application's own log tag.
     public static final String LOG_TAG = "Disable Prox Sensor"; //$NON-NLS-1$
-
-    /**
-     * Flag to enable logcat messages.
-     */
     public static final boolean IS_LOGGABLE = BuildConfig.DEBUG;
 
-    /**
-     * Flag to enable runtime checking of method parameters.
-     */
-    public static final boolean IS_PARAMETER_CHECKING_ENABLED = BuildConfig.DEBUG;
+    public static final String PACKAGE_NAME = "com.mrchandler.disableprox";
 
-    /**
-     * Flag to enable runtime checking of whether a method is called on the correct thread.
-     */
-    public static final boolean IS_CORRECT_THREAD_CHECKING_ENABLED = BuildConfig.DEBUG;
     public static final String SKU_TASKER = "tasker_purchase";
+
     public static final String PREFS_FILE_NAME = "com.mrchandler.disableprox_preferences";
-    public static final String PREFS_PACKAGE = "com.mrchandler.disableprox";
     public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
     public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
-    public static final String PREFS_KEY_PROX_SENSOR = "prefs_key_prox_sensor";
-    public static final int DO_NOTHING = 0;
-    public static final int REMOVE_SENSOR = 1;
-    public static final int MOCK_VALUES = 2;
+
+    public static final int SENSOR_STATUS_DO_NOTHING = 0;
+    public static final int SENSOR_STATUS_REMOVE_SENSOR = 1;
+    public static final int SENSOR_STATUS_MOCK_VALUES = 2;
 
     /**
      * Determines the "versionCode" in the {@code AndroidManifest}.
@@ -58,12 +40,6 @@ public final class Constants {
      * @return versionCode of the app.
      */
     public static int getVersionCode(final Context context) {
-        if (Constants.IS_PARAMETER_CHECKING_ENABLED) {
-            if (null == context) {
-                throw new IllegalArgumentException("context cannot be null"); //$NON-NLS-1$
-            }
-        }
-
         try {
             return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
         } catch (final UnsupportedOperationException e) {
@@ -77,11 +53,6 @@ public final class Constants {
         }
     }
 
-    /**
-     * Private constructor prevents instantiation.
-     *
-     * @throws UnsupportedOperationException because this class cannot be instantiated.
-     */
     private Constants() {
         throw new UnsupportedOperationException("This class is non-instantiable"); //$NON-NLS-1$
     }

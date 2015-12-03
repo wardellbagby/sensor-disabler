@@ -99,6 +99,10 @@ public final class SensorUtil {
                 + sensor.getType();
     }
 
+    public static String generateUniqueSensorMockValuesKey(Sensor sensor) {
+        return generateUniqueSensorKey(sensor) + "_values";
+    }
+
     public static Sensor getSensorFromUniqueSensorKey(Context context, String key) {
         String[] data = key.split("\\|"); //Regex, man. Regex.
         if (data.length >= 4) {
@@ -187,6 +191,6 @@ public final class SensorUtil {
             case Sensor.TYPE_TEMPERATURE:
                 return "Temperature";
         }
-        return "Unknown";
+        return null;
     }
 }

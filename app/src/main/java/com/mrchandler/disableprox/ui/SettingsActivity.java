@@ -13,41 +13,42 @@
 package com.mrchandler.disableprox.ui;
 
 
-import android.app.ActionBar;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.mrchandler.disableprox.R;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
+import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class SettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
+public class SettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
-    private static final int PERMISSION_RESULT_CODE = 192;
     private static final String CURRENT_FRAGMENT = "currentFragment";
     private static final String SELECTED_ITEM_POSITION = "selectedItemPosition";
 
+    private SensorSettingsFragment currentFragment;
     IabHelper helper;
     SharedPreferences prefs;
     List<Sensor> fullSensorList = new ArrayList<>();
-    Spinner spinner;
+    ActionBarDrawerToggle toggle;
+    DrawerLayout drawer;
 
 
     @Override
@@ -56,14 +57,29 @@ public final class SettingsActivity extends FragmentActivity implements SensorLi
         setContentView(R.layout.sensor_setting_layout);
         SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
         fullSensorList = manager.getSensorList(Sensor.TYPE_ALL);
-        initActionBar();
-
+        if (findViewById(R.id.drawer_layout) != null) {
+            drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            toggle = new ActionBarDrawerToggle(this,
+                    (DrawerLayout) findViewById(R.id.drawer_layout),
+                    android.R.string.yes,
+                    android.R.string.no);
+            drawer.setDrawerListener(toggle);
+            drawer.setScrimColor(getResources().getColor(android.R.color.background_dark));
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+            getActionBar().setHomeButtonEnabled(true);
+            getActionBar().setDisplayShowHomeEnabled(false);
+            toggle.syncState();
+        }
         if (savedInstanceState != null) {
-            if (spinner != null) {
-                spinner.setSelection(savedInstanceState.getInt(SELECTED_ITEM_POSITION));
+            SensorSettingsFragment fragment = (SensorSettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, CURRENT_FRAGMENT);
+            if (fragment != null) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT).commit();
+                String sensorTitle = SensorUtil.getHumanStringType(fragment.sensor);
+                if (sensorTitle == null) {
+                    sensorTitle = fragment.sensor.getName();
+                }
+                setTitle(sensorTitle);
             }
-            Fragment fragment = getSupportFragmentManager().getFragment(savedInstanceState, CURRENT_FRAGMENT);
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT).commit();
         }
 
         //Has to be done to access with XSharedPreferences.
@@ -105,64 +121,35 @@ public final class SettingsActivity extends FragmentActivity implements SensorLi
         }
     }
 
-    private void initActionBar() {
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayShowTitleEnabled(false);
-            actionBar.setDisplayShowCustomEnabled(true);
-            actionBar.setCustomView(R.layout.actionbar_layout);
-            if (actionBar.getCustomView() instanceof Spinner) {
-                spinner = (Spinner) actionBar.getCustomView();
-            }
-            if (spinner != null) {
-                final ArrayAdapter<Sensor> adapter = new ArrayAdapter<Sensor>(this, android.R.layout.simple_spinner_item, fullSensorList) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = new MenuInflater(this);
+        inflater.inflate(R.menu.settings_menu, menu);
+        MenuItem freeload = menu.findItem(R.id.freeload);
+        if (prefs.contains(Constants.PREFS_KEY_FREELOAD)) {
+            freeload.setChecked(true);
+        } else {
+            freeload.setChecked(false);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
 
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        TextView sensorView;
-                        if (convertView == null) {
-                            sensorView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_spinner_item, parent, false);
-                            sensorView.setTextAppearance(getContext(), android.R.style.TextAppearance_DeviceDefault_Widget_ActionBar_Title);
-                        } else {
-                            sensorView = (TextView) convertView;
-                        }
-                        sensorView.setText(getItem(position).getName());
-                        return sensorView;
-                    }
-
-                    @Override
-                    public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                        TextView sensorDropDownView;
-                        if (convertView == null) {
-                            sensorDropDownView = (TextView) getLayoutInflater().inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-                        } else {
-                            sensorDropDownView = (TextView) convertView;
-                        }
-                        sensorDropDownView.setText(getItem(position).getName());
-                        return sensorDropDownView;
-                    }
-                };
-
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                spinner.setAdapter(adapter);
-                spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                    @Override
-                    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                        Sensor sensor = adapter.getItem(position);
-                        onSensorClicked(sensor);
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                    }
-                });
-            } else {
-                actionBar.setDisplayShowTitleEnabled(true);
-                actionBar.setDisplayShowCustomEnabled(false);
-                //TODO Change title appearance in tablet mode.
-                //To make sure in tablet mode we start selected on a sensor.
-                onSensorClicked(fullSensorList.get(0));
-            }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (toggle != null && toggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        switch (item.getItemId()) {
+            case R.id.freeload:
+                item.setChecked(!item.isChecked());
+                if (item.isChecked()) {
+                    prefs.edit().putBoolean(Constants.PREFS_KEY_FREELOAD, true).apply();
+                } else {
+                    prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -170,9 +157,8 @@ public final class SettingsActivity extends FragmentActivity implements SensorLi
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(CURRENT_FRAGMENT);
-        getSupportFragmentManager().putFragment(outState, CURRENT_FRAGMENT, fragment);
-        if (spinner != null) {
-            outState.putInt(SELECTED_ITEM_POSITION, spinner.getSelectedItemPosition());
+        if (fragment != null) {
+            getSupportFragmentManager().putFragment(outState, CURRENT_FRAGMENT, fragment);
         }
     }
 
@@ -182,6 +168,26 @@ public final class SettingsActivity extends FragmentActivity implements SensorLi
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT)
                 .commit();
-        setTitle(sensor.getName());
+        String sensorTitle = SensorUtil.getHumanStringType(sensor);
+        if (sensorTitle == null) {
+            sensorTitle = sensor.getName();
+        }
+        setTitle(sensorTitle);
+        currentFragment = fragment;
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+    }
+
+    Sensor getCurrentShowingSensor() {
+        return currentFragment.sensor;
+    }
+
+    int getCurrentSensorStatus() {
+        return currentFragment.getSensorStatus();
+    }
+
+    float[] getCurrentMockValues() {
+        return currentFragment.getValues();
     }
 }
