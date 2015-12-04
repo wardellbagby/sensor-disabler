@@ -50,7 +50,28 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
 
         if (null == savedInstanceState) {
             if (PluginBundleManager.isBundleValid(localeBundle)) {
-                //TODO Init state.
+                String sensorStatusKey = localeBundle.getString(PluginBundleManager.BUNDLE_EXTRA_SENSOR_STATUS_KEY);
+                int sensorStatusValue = localeBundle.getInt(PluginBundleManager.BUNDLE_EXTRA_SENSOR_STATUS_VALUE);
+                float[] sensorMockValues = localeBundle.getFloatArray(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES);
+                Sensor sensor = SensorUtil.getSensorFromUniqueSensorKey(this, sensorStatusKey);
+                TaskerSensorSettingsFragment fragment = TaskerSensorSettingsFragment.newInstance(sensorStatusKey, sensorStatusValue, sensorMockValues);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT)
+                        .commit();
+                String sensorTitle = SensorUtil.getHumanStringType(sensor);
+                if (sensorTitle == null) {
+                    sensorTitle = sensor.getName();
+                }
+                setTitle(sensorTitle);
+                currentFragment = fragment;
+                if (drawer != null) {
+                    drawer.closeDrawer(GravityCompat.START);
+                }
+                if (currentFragment == null) {
+                    fab.hide();
+                } else {
+                    fab.show();
+                }
             }
         }
         initInAppBilling();
@@ -133,6 +154,11 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
         } else {
             fab.show();
         }
+    }
+
+    @Override
+    public void showDefaultSensorFragment() {
+        //no-op//
     }
 
     private void initInAppBilling() {

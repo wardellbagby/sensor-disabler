@@ -38,6 +38,7 @@
     <string name="remove_sensor_radio_button">Remove sensor</string>
     <string name="mock_sensor_radio_button">Mock sensor values</string>
     <string name="menu_freeload">Freeload</string>
+    <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
     <string-array name="accelerometer_values">
         <item>Acceleration X (m/s^2):</item>
         <item>Acceleration Y (m/s^2):</item>

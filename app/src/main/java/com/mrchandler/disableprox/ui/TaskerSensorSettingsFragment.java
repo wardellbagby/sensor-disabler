@@ -11,6 +11,18 @@ import com.mrchandler.disableprox.util.SensorUtil;
  */
 public class TaskerSensorSettingsFragment extends SensorSettingsFragment {
 
+    public static final String ENABLED_STATUS = "enabledStatus";
+    public static final String MOCK_VALUES = "mockValues";
+
+    public static TaskerSensorSettingsFragment newInstance(String sensorKey, int enabledStatus, float[] mockValues) {
+        TaskerSensorSettingsFragment fragment = new TaskerSensorSettingsFragment();
+        Bundle bundle = new Bundle(1);
+        bundle.putString(UNIQUE_SENSOR_KEY, sensorKey);
+        bundle.putInt(ENABLED_STATUS, enabledStatus);
+        bundle.putFloatArray(MOCK_VALUES, mockValues);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
 
     public static TaskerSensorSettingsFragment newInstance(Sensor sensor) {
         TaskerSensorSettingsFragment fragment = new TaskerSensorSettingsFragment();
@@ -19,6 +31,17 @@ public class TaskerSensorSettingsFragment extends SensorSettingsFragment {
         bundle.putString(UNIQUE_SENSOR_KEY, SensorUtil.generateUniqueSensorKey(sensor));
         fragment.setArguments(bundle);
         return fragment;
+    }
+
+    @Override
+    public void loadDefaultValues() {
+        Bundle settings = getArguments();
+        if (settings != null && settings.containsKey(ENABLED_STATUS) && settings.containsKey(MOCK_VALUES)) {
+            setSensorStatus(settings.getInt(ENABLED_STATUS));
+            setValues(settings.getFloatArray(MOCK_VALUES));
+        } else {
+            super.loadDefaultValues();
+        }
     }
 
     @Override

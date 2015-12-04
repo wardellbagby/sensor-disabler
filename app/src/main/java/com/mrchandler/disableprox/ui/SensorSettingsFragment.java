@@ -70,8 +70,11 @@ public class SensorSettingsFragment extends Fragment {
         if (getView() != null) {
             return getView();
         }
-        RelativeLayout rootView = (RelativeLayout) inflater.inflate(R.layout.sensor_setting_fragment_layout, container, false);
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.sensor_setting_fragment_layout, container, false);
         LinearLayout linearLayout = (LinearLayout) rootView.findViewById(R.id.content_view);
+        if (!SensorUtil.isDangerousSensor(sensor)) {
+            rootView.findViewById(R.id.dangerous_sensor_text_view).setVisibility(View.GONE);
+        }
         radioGroup = (RadioGroup) LayoutInflater.from(getContext()).inflate(R.layout.single_sensor_value_setting_header, linearLayout, false);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -264,6 +267,23 @@ public class SensorSettingsFragment extends Fragment {
                 return Constants.SENSOR_STATUS_REMOVE_SENSOR;
             case R.id.mock_sensor_values_radio_button:
                 return Constants.SENSOR_STATUS_MOCK_VALUES;
+        }
+    }
+
+    public void setSensorStatus(int status) {
+        if (radioGroup != null) {
+            switch (status) {
+                default:
+                case Constants.SENSOR_STATUS_DO_NOTHING:
+                    radioGroup.check(R.id.do_nothing_radio_button);
+                    break;
+                case Constants.SENSOR_STATUS_REMOVE_SENSOR:
+                    radioGroup.check(R.id.remove_sensor_radio_button);
+                    break;
+                case Constants.SENSOR_STATUS_MOCK_VALUES:
+                    radioGroup.check(R.id.mock_sensor_values_radio_button);
+                    break;
+            }
         }
     }
 }

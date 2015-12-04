@@ -38,6 +38,8 @@ import com.mrchandler.disableprox.util.Inventory;
 import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class SensorSettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
@@ -59,7 +61,28 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sensor_setting_activity_layout);
         SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        fullSensorList = manager.getSensorList(Sensor.TYPE_ALL);
+        //getSensorList returns an unmodifiable list
+        fullSensorList = new ArrayList<>(manager.getSensorList(Sensor.TYPE_ALL));
+
+        Collections.sort(fullSensorList, new Comparator<Sensor>() {
+            @Override
+            public int compare(Sensor lhs, Sensor rhs) {
+                String lhsName = SensorUtil.getHumanStringType(lhs);
+                String rhsName = SensorUtil.getHumanStringType(rhs);
+                if (lhsName == null) {
+                    lhsName = lhs.getName();
+                }
+                if (rhsName == null) {
+                    rhsName = rhs.getName();
+                }
+                return lhsName.compareTo(rhsName);
+            }
+        });
+
+        //Set sorted sensor list for the SensorListFragment
+        ((SensorListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.sensor_list_fragment))
+                .setSensors(fullSensorList);
 
         if (findViewById(R.id.drawer_layout) != null) {
             drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -112,9 +135,6 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
             //TODO Do opposite of the other if...
         }
 
-        if (!fullSensorList.isEmpty()) {
-            onSensorClicked(fullSensorList.get(0));
-        }
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Tasker IAP?
         if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
@@ -142,6 +162,12 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
                 }
             });
         }
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        showDefaultSensorFragment();
     }
 
     @Override
@@ -204,6 +230,12 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
             fab.hide();
         } else {
             fab.show();
+        }
+    }
+
+    public void showDefaultSensorFragment() {
+        if (!fullSensorList.isEmpty()) {
+            onSensorClicked(fullSensorList.get(0));
         }
     }
 

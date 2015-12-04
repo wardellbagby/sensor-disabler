@@ -193,4 +193,18 @@ public final class SensorUtil {
         }
         return null;
     }
+
+    public static boolean isDangerousSensor(Sensor sensor) {
+        switch (sensor.getType()) {
+            case Sensor.TYPE_LIGHT:
+            case Sensor.TYPE_ACCELEROMETER:
+            case Sensor.TYPE_ORIENTATION:
+            case Sensor.TYPE_GYROSCOPE:
+            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                return true;
+            default:
+                //Don't have a human string type? Safer to say that it's possibly dangerous.
+                return getHumanStringType(sensor) == null;
+        }
+    }
 }

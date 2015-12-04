@@ -1,8 +1,10 @@
 package com.mrchandler.disableprox.ui;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
@@ -11,6 +13,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.mrchandler.disableprox.R;
+import com.mrchandler.disableprox.util.SensorUtil;
+
+import java.util.List;
 
 
 public class SensorListFragment extends ListFragment {
@@ -27,22 +34,6 @@ public class SensorListFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SensorManager manager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
-        //TODO This list adapter should share its sensor list with its Activity.
-        setListAdapter(new ArrayAdapter<Sensor>(getContext(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, manager.getSensorList(Sensor.TYPE_ALL)) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                TextView view;
-                if (convertView != null) {
-                    view = (TextView) convertView;
-                } else {
-                    view = (TextView) LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
-                }
-                view.setText(getItem(position).getName());
-                return view;
-            }
-        });
     }
 
 
@@ -70,6 +61,38 @@ public class SensorListFragment extends ListFragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public void setSensors(List<Sensor> sensorList) {
+        setListAdapter(new ArrayAdapter<Sensor>(getContext(),
+                R.layout.sensor_list_item, sensorList) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView textView;
+                if (convertView != null) {
+                    textView = (TextView) convertView;
+                } else {
+                    textView = (TextView) LayoutInflater.from(parent.getContext()).inflate(R.layout.sensor_list_item, parent, false);
+                }
+
+                Sensor sensor = getItem(position);
+                String title = SensorUtil.getHumanStringType(sensor);
+                if (title == null) {
+                    title = sensor.getName();
+                }
+                textView.setText(title);
+                if (SensorUtil.isDangerousSensor(sensor)) {
+                    Drawable drawable = getResources().getDrawable(R.drawable.ic_error_outline_white_24dp);
+                    if (drawable != null) {
+                        drawable.setColorFilter(Color.RED, PorterDuff.Mode.SRC_ATOP);
+                    }
+                    textView.setCompoundDrawablesWithIntrinsicBounds(null, null, drawable, null);
+                } else {
+                    textView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+                }
+                return textView;
+            }
+        });
     }
 
     @Override
