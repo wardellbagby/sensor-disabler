@@ -40,9 +40,9 @@
     <string name="menu_freeload">Freeload</string>
     <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
     <string-array name="accelerometer_values">
-        <item>Acceleration X (m/s^2):</item>
-        <item>Acceleration Y (m/s^2):</item>
-        <item>Acceleration Z (m/s^2):</item>
+        <item>Acceleration X (m/s²):</item>
+        <item>Acceleration Y (m/s²):</item>
+        <item>Acceleration Z (m/s²):</item>
     </string-array>
     <string-array name="magnetic_values">
         <item>Magnetic Field X (uT):</item>
@@ -64,14 +64,14 @@
         <item>Distance (cm):</item>
     </string-array>
     <string-array name="gravity_values">
-        <item>X (m/s^2):</item>
-        <item>Y (m/s^2):</item>
-        <item>Z (m/s^2):</item>
+        <item>X (m/s²):</item>
+        <item>Y (m/s²):</item>
+        <item>Z (m/s²):</item>
     </string-array>
     <string-array name="linear_acceleration_values">
-        <item>X (m/s^2):</item>
-        <item>Y (m/s^2):</item>
-        <item>Z (m/s^2):</item>
+        <item>X (m/s²):</item>
+        <item>Y (m/s²):</item>
+        <item>Z (m/s²):</item>
     </string-array>
     <string-array name="rotation_vector_values">
         <item>x*sin(θ/2):</item>
