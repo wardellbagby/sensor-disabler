@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fab="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.melnykov.fab.ObservableScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="8dip">
+
+            <LinearLayout
+                android:id="@+id/rootView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/fragment_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </com.melnykov.fab.ObservableScrollView>
+
+        <com.melnykov.fab.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:layout_margin="32dp"
+            android:src="@drawable/ic_save_white_24dp"
+            fab:fab_colorNormal="@color/primary_accent"
+            fab:fab_colorPressed="@color/primary_accent"
+            fab:fab_colorRipple="@color/primary" />
+
+    </FrameLayout>
+
+    <fragment
+        android:id="@+id/sensor_list_fragment"
+        android:name="com.mrchandler.disableprox.ui.SensorListFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        tools:layout="@android:layout/simple_list_item_1" />
+</android.support.v4.widget.DrawerLayout>

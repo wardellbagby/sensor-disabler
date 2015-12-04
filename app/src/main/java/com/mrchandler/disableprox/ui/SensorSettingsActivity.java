@@ -26,7 +26,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 
+import com.melnykov.fab.FloatingActionButton;
+import com.melnykov.fab.ObservableScrollView;
 import com.mrchandler.disableprox.R;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.IabHelper;
@@ -37,26 +40,27 @@ import com.mrchandler.disableprox.util.SensorUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
+public class SensorSettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
 
-    private static final String TAG = SettingsActivity.class.getSimpleName();
-    private static final String CURRENT_FRAGMENT = "currentFragment";
-    private static final String SELECTED_ITEM_POSITION = "selectedItemPosition";
+    private static final String TAG = SensorSettingsActivity.class.getSimpleName();
+    static final String CURRENT_FRAGMENT = "currentFragment";
 
-    private SensorSettingsFragment currentFragment;
+    SensorSettingsFragment currentFragment;
     IabHelper helper;
     SharedPreferences prefs;
     List<Sensor> fullSensorList = new ArrayList<>();
     ActionBarDrawerToggle toggle;
     DrawerLayout drawer;
+    FloatingActionButton fab;
 
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.sensor_setting_layout);
+        setContentView(R.layout.sensor_setting_activity_layout);
         SensorManager manager = (SensorManager) getSystemService(SENSOR_SERVICE);
         fullSensorList = manager.getSensorList(Sensor.TYPE_ALL);
+
         if (findViewById(R.id.drawer_layout) != null) {
             drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
             toggle = new ActionBarDrawerToggle(this,
@@ -65,11 +69,27 @@ public class SettingsActivity extends FragmentActivity implements SensorListFrag
                     android.R.string.no);
             drawer.setDrawerListener(toggle);
             drawer.setScrimColor(getResources().getColor(android.R.color.background_dark));
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-            getActionBar().setHomeButtonEnabled(true);
-            getActionBar().setDisplayShowHomeEnabled(false);
+
+            if (getActionBar() != null) {
+                getActionBar().setDisplayHomeAsUpEnabled(true);
+                getActionBar().setHomeButtonEnabled(true);
+                getActionBar().setDisplayShowHomeEnabled(false);
+            }
             toggle.syncState();
         }
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentFragment != null) {
+                    currentFragment.saveSettings();
+                }
+            }
+        });
+        ObservableScrollView scrollView = (ObservableScrollView) findViewById(R.id.scrollView);
+        fab.attachToScrollView(scrollView);
+        fab.hide(false);
+
         if (savedInstanceState != null) {
             SensorSettingsFragment fragment = (SensorSettingsFragment) getSupportFragmentManager().getFragment(savedInstanceState, CURRENT_FRAGMENT);
             if (fragment != null) {
@@ -87,11 +107,14 @@ public class SettingsActivity extends FragmentActivity implements SensorListFrag
 
         //freeloadTextView = (TextView) findViewById(R.id.freeload);
         if (prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false)) {
-            //         freeloadTextView.setVisibility(View.VISIBLE);
+            // TODO Show that freeloading is turned on.
         } else if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
-            //          freeloadTextView.setVisibility(View.GONE);
+            //TODO Do opposite of the other if...
         }
 
+        if (!fullSensorList.isEmpty()) {
+            onSensorClicked(fullSensorList.get(0));
+        }
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Tasker IAP?
         if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
@@ -176,6 +199,11 @@ public class SettingsActivity extends FragmentActivity implements SensorListFrag
         currentFragment = fragment;
         if (drawer != null) {
             drawer.closeDrawer(GravityCompat.START);
+        }
+        if (currentFragment == null) {
+            fab.hide();
+        } else {
+            fab.show();
         }
     }
 

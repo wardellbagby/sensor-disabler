@@ -3,6 +3,8 @@ package com.mrchandler.disableprox.ui;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -68,10 +70,9 @@ public class SensorSettingsFragment extends Fragment {
         if (getView() != null) {
             return getView();
         }
-        LinearLayout rootView = new LinearLayout(getContext());
-        rootView.setOrientation(LinearLayout.VERTICAL);
-        rootView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        radioGroup = (RadioGroup) LayoutInflater.from(getContext()).inflate(R.layout.single_sensor_value_setting_header, rootView, false);
+        RelativeLayout rootView = (RelativeLayout) inflater.inflate(R.layout.sensor_setting_fragment_layout, container, false);
+        LinearLayout linearLayout = (LinearLayout) rootView.findViewById(R.id.content_view);
+        radioGroup = (RadioGroup) LayoutInflater.from(getContext()).inflate(R.layout.single_sensor_value_setting_header, linearLayout, false);
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -86,13 +87,24 @@ public class SensorSettingsFragment extends Fragment {
                 }
             }
         });
-        rootView.addView(radioGroup);
+        linearLayout.addView(radioGroup);
         if (labels.length == 0) {
             radioGroup.findViewById(R.id.mock_sensor_values_radio_button).setEnabled(false);
         }
         valueSettings = new ArrayList<>();
+
+        int accentColor = getResources().getColor(R.color.primary_accent);
+        int[][] states = new int[][]{
+                new int[]{android.R.attr.state_enabled},
+                new int[]{}
+        };
+        int[] colors = new int[]{
+                accentColor,
+                Color.GRAY
+        };
+        ColorStateList stateList = new ColorStateList(states, colors);
         for (String label : labels) {
-            RelativeLayout layout = (RelativeLayout) LayoutInflater.from(getContext()).inflate(R.layout.single_sensor_value_setting, rootView, false);
+            RelativeLayout layout = (RelativeLayout) LayoutInflater.from(getContext()).inflate(R.layout.single_sensor_value_setting, linearLayout, false);
             TextView textView = (TextView) layout.findViewById(R.id.label);
             textView.setText(label);
             /*There was an issue before where all seekbars would have the same value after rotation.
@@ -100,6 +112,8 @@ public class SensorSettingsFragment extends Fragment {
             and ended up being more hassle than it was worth.
              */
             DiscreteSeekBar seekBar = (DiscreteSeekBar) layout.findViewById(R.id.value);
+            seekBar.setScrubberColor(stateList);
+            seekBar.setThumbColor(stateList, accentColor);
             seekBar.setMin((int) minimumValue * 10);
             seekBar.setMax((int) maximumValue * 10);
             seekBar.setNumericTransformer(new DiscreteSeekBar.NumericTransformer() {
@@ -119,7 +133,7 @@ public class SensorSettingsFragment extends Fragment {
                 }
             });
             valueSettings.add(seekBar);
-            rootView.addView(layout);
+            linearLayout.addView(layout);
         }
         loadDefaultValues();
         return rootView;
@@ -134,9 +148,6 @@ public class SensorSettingsFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.save:
-                saveToPrefs();
-                break;
             case R.id.info:
                 showInfoDialog();
                 break;
@@ -159,7 +170,7 @@ public class SensorSettingsFragment extends Fragment {
                 .show();
     }
 
-    protected void saveToPrefs() {
+    void saveSettings() {
         if (getContext() != null) {
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
             int enabledStatusValue = getSensorStatus();
@@ -239,7 +250,7 @@ public class SensorSettingsFragment extends Fragment {
     }
 
     public void setValues(float[] values) {
-        for (int i = 0; i < valueSettings.size(); i++) {
+        for (int i = 0; i < Math.min(values.length, valueSettings.size()); i++) {
             valueSettings.get(i).setProgress((int) (values[i] * 10));
         }
     }

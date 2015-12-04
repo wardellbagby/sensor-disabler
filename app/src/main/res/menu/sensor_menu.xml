@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <item
-        android:id="@+id/save"
-        android:icon="@drawable/ic_save_white_24dp"
+        android:id="@+id/reset"
+        android:icon="@drawable/ic_restore_white_24dp"
         android:showAsAction="ifRoom"
-        android:title="@string/menu_save"
+        android:title="@string/menu_reset"
         tools:ignore="AppCompatResource" />
     <item
         android:id="@+id/info"
@@ -13,11 +13,4 @@
         android:showAsAction="ifRoom"
         android:title="@string/menu_info"
         tools:ignore="AppCompatResource" />
-    <item
-        android:id="@+id/reset"
-        android:icon="@drawable/ic_restore_white_24dp"
-        android:showAsAction="ifRoom"
-        android:title="@string/menu_reset"
-        tools:ignore="AppCompatResource" />
-
 </menu>

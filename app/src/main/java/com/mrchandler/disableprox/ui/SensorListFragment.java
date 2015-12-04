@@ -1,6 +1,5 @@
 package com.mrchandler.disableprox.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -29,6 +28,7 @@ public class SensorListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SensorManager manager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
+        //TODO This list adapter should share its sensor list with its Activity.
         setListAdapter(new ArrayAdapter<Sensor>(getContext(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, manager.getSensorList(Sensor.TYPE_ALL)) {
             @Override
@@ -47,12 +47,12 @@ public class SensorListFragment extends ListFragment {
 
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
         try {
-            mListener = (OnSensorClickedListener) activity;
+            mListener = (OnSensorClickedListener) context;
         } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+            throw new ClassCastException(context.getClass().getSimpleName()
                     + " must implement OnSensorClickedListener");
         }
     }
@@ -60,10 +60,10 @@ public class SensorListFragment extends ListFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        setEmptyText("No sensors available on your device.");
         ListView listView = getListView();
         listView.setDivider(null);
         listView.setScrollbarFadingEnabled(false);
-
     }
 
     @Override

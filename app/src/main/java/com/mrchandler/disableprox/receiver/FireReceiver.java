@@ -21,7 +21,7 @@ import android.util.Log;
 
 import com.mrchandler.disableprox.bundle.BundleScrubber;
 import com.mrchandler.disableprox.bundle.PluginBundleManager;
-import com.mrchandler.disableprox.ui.TaskerEditActivity;
+import com.mrchandler.disableprox.ui.TaskerSensorSettingsActivity;
 import com.mrchandler.disableprox.util.Constants;
 
 import java.util.Locale;
@@ -38,7 +38,7 @@ public final class FireReceiver extends BroadcastReceiver {
      * @param context {@inheritDoc}.
      * @param intent  the incoming {@link com.twofortyfouram.locale.Intent#ACTION_FIRE_SETTING} Intent. This
      *                should contain the {@link com.twofortyfouram.locale.Intent#EXTRA_BUNDLE} that was saved by
-     *                {@link TaskerEditActivity} and later broadcast by Locale.
+     *                {@link TaskerSensorSettingsActivity} and later broadcast by Locale.
      */
     @Override
     public void onReceive(final Context context, final Intent intent) {
@@ -65,8 +65,10 @@ public final class FireReceiver extends BroadcastReceiver {
             String sensorValueKey = bundle.getString(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY);
             float[] sensorMockValues = bundle.getFloatArray(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES);
             String sensorMockValuesString = "";
-            for (float value : sensorMockValues) {
-                sensorMockValuesString += value + ":";
+            if (sensorMockValues != null) {
+                for (float value : sensorMockValues) {
+                    sensorMockValuesString += value + ":";
+                }
             }
             SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
             prefs.edit().putInt(sensorStatusKey, sensorStatusValue)

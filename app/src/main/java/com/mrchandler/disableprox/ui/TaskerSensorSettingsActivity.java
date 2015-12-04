@@ -15,7 +15,9 @@ package com.mrchandler.disableprox.ui;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.hardware.Sensor;
 import android.os.Bundle;
+import android.support.v4.view.GravityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -31,24 +33,9 @@ import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.Arrays;
 
-/**
- * This is the "Edit" activity for a Locale Plug-in.
- * <p/>
- * This Activity can be started in one of two states:
- * <ul>
- * <li>New plug-in instance: The Activity's Intent will not contain
- * {@link com.twofortyfouram.locale.Intent#EXTRA_BUNDLE}.</li>
- * <li>Old plug-in instance: The Activity's Intent will contain
- * {@link com.twofortyfouram.locale.Intent#EXTRA_BUNDLE} from a previously saved plug-in instance that the
- * user is editing.</li>
- * </ul>
- *
- * @see com.twofortyfouram.locale.Intent#ACTION_EDIT_SETTING
- * @see com.twofortyfouram.locale.Intent#EXTRA_BUNDLE
- */
-public final class TaskerEditActivity extends SettingsActivity {
+public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
 
-    private static final String TAG = TaskerEditActivity.class.getSimpleName();
+    private static final String TAG = TaskerSensorSettingsActivity.class.getSimpleName();
     private static final int PURCHASE_RESULT_CODE = 191;
 
     private boolean doNotSave = false;
@@ -56,106 +43,18 @@ public final class TaskerEditActivity extends SettingsActivity {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         BundleScrubber.scrub(getIntent());
         final Bundle localeBundle = getIntent().getBundleExtra(com.twofortyfouram.locale.Intent.EXTRA_BUNDLE);
         BundleScrubber.scrub(localeBundle);
 
         if (null == savedInstanceState) {
             if (PluginBundleManager.isBundleValid(localeBundle)) {
-                //Init state
+                //TODO Init state.
             }
         }
-        final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
-        //Has the user purchased the Tasker IAP?
-        if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
-            helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
-                @Override
-                public void onIabSetupFinished(IabResult result) {
-                    if (result.isFailure()) {
-                        Log.d(TAG, "Unable to get up In-App Billing. Oh well.");
-                        return;
-                    }
-                    helper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
-                        @Override
-                        public void onQueryInventoryFinished(IabResult result, Inventory inv) {
-                            if (result.isFailure()) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
-                                return;
-                            }
-                            if (inv.hasPurchase(Constants.SKU_TASKER)) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
-                                prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
-                            } else {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
-                                if (!(prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false))) {
-                                    AlertDialog dialog = new AlertDialog.Builder(TaskerEditActivity.this)
-                                            .setTitle(R.string.iap_dialog_title)
-                                            .setMessage(R.string.iap_dialog_message)
-                                            .setNegativeButton("Not Right Now", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    doNotSave = true;
-                                                    finish();
-                                                }
-                                            })
-                                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    helper.launchPurchaseFlow(TaskerEditActivity.this, Constants.SKU_TASKER, PURCHASE_RESULT_CODE, new IabHelper.OnIabPurchaseFinishedListener() {
-                                                        @Override
-                                                        public void onIabPurchaseFinished(IabResult result, Purchase info) {
-                                                            if (result.isFailure()) {
-                                                                Toast.makeText(TaskerEditActivity.this, "Error getting purchase details.", Toast.LENGTH_SHORT).show();
-                                                                doNotSave = true;
-                                                                finish();
-                                                                return;
-                                                            }
-                                                            if (info.getSku().equals(Constants.SKU_TASKER)) {
-                                                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
-                                                            }
-                                                        }
-                                                    });
-                                                }
-                                            })
-                                            .setNeutralButton("More Information", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    AlertDialog oldDialog = (AlertDialog) dialog;
-                                                    oldDialog.dismiss();
-                                                    AlertDialog newDialog = new AlertDialog.Builder(TaskerEditActivity.this)
-                                                            .setTitle(getString(R.string.iap_dialog_title))
-                                                            .setMessage(getString(R.string.iap_dialog_more_information))
-                                                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                                                @Override
-                                                                public void onCancel(DialogInterface dialog) {
-                                                                    doNotSave = true;
-                                                                    finish();
-                                                                }
-                                                            })
-                                                            .setCancelable(true)
-                                                            .create();
-                                                    newDialog.setCanceledOnTouchOutside(true);
-                                                    newDialog.show();
-                                                }
-                                            })
-                                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                                                @Override
-                                                public void onCancel(DialogInterface dialog) {
-                                                    doNotSave = true;
-                                                    finish();
-                                                }
-                                            })
-                                            .setCancelable(true)
-                                            .create();
-                                    dialog.setCanceledOnTouchOutside(true);
-                                    dialog.show();
-                                }
-                            }
-                        }
-                    });
-                }
-            });
-        }
+        initInAppBilling();
+        fab.setImageResource(R.drawable.ic_check_white_24dp);
     }
 
     @Override
@@ -212,5 +111,121 @@ public final class TaskerEditActivity extends SettingsActivity {
                 break;
         }
         return builder.toString();
+    }
+
+    @Override
+    public void onSensorClicked(Sensor sensor) {
+        TaskerSensorSettingsFragment fragment = TaskerSensorSettingsFragment.newInstance(sensor);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment, CURRENT_FRAGMENT)
+                .commit();
+        String sensorTitle = SensorUtil.getHumanStringType(sensor);
+        if (sensorTitle == null) {
+            sensorTitle = sensor.getName();
+        }
+        setTitle(sensorTitle);
+        currentFragment = fragment;
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+        if (currentFragment == null) {
+            fab.hide();
+        } else {
+            fab.show();
+        }
+    }
+
+    private void initInAppBilling() {
+        final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
+        //Has the user purchased the Tasker IAP?
+        if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
+            helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
+                @Override
+                public void onIabSetupFinished(IabResult result) {
+                    if (result.isFailure()) {
+                        Log.d(TAG, "Unable to get up In-App Billing. Oh well.");
+                        return;
+                    }
+                    helper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
+                        @Override
+                        public void onQueryInventoryFinished(IabResult result, Inventory inv) {
+                            if (result.isFailure()) {
+                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
+                                return;
+                            }
+                            if (inv.hasPurchase(Constants.SKU_TASKER)) {
+                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
+                                prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
+                            } else {
+                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
+                                if (!(prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false))) {
+                                    AlertDialog dialog = new AlertDialog.Builder(TaskerSensorSettingsActivity.this)
+                                            .setTitle(R.string.iap_dialog_title)
+                                            .setMessage(R.string.iap_dialog_message)
+                                            .setNegativeButton("Not Right Now", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    doNotSave = true;
+                                                    finish();
+                                                }
+                                            })
+                                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    helper.launchPurchaseFlow(TaskerSensorSettingsActivity.this, Constants.SKU_TASKER, PURCHASE_RESULT_CODE, new IabHelper.OnIabPurchaseFinishedListener() {
+                                                        @Override
+                                                        public void onIabPurchaseFinished(IabResult result, Purchase info) {
+                                                            if (result.isFailure()) {
+                                                                Toast.makeText(TaskerSensorSettingsActivity.this, "Error getting purchase details.", Toast.LENGTH_SHORT).show();
+                                                                doNotSave = true;
+                                                                finish();
+                                                                return;
+                                                            }
+                                                            if (info.getSku().equals(Constants.SKU_TASKER)) {
+                                                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                            })
+                                            .setNeutralButton("More Information", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    AlertDialog oldDialog = (AlertDialog) dialog;
+                                                    oldDialog.dismiss();
+                                                    AlertDialog newDialog = new AlertDialog.Builder(TaskerSensorSettingsActivity.this)
+                                                            .setTitle(getString(R.string.iap_dialog_title))
+                                                            .setMessage(getString(R.string.iap_dialog_more_information))
+                                                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                                                @Override
+                                                                public void onCancel(DialogInterface dialog) {
+                                                                    doNotSave = true;
+                                                                    finish();
+                                                                }
+                                                            })
+                                                            .setCancelable(true)
+                                                            .create();
+                                                    newDialog.setCanceledOnTouchOutside(true);
+                                                    newDialog.show();
+                                                }
+                                            })
+                                            .setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                                @Override
+                                                public void onCancel(DialogInterface dialog) {
+                                                    doNotSave = true;
+                                                    finish();
+                                                }
+                                            })
+                                            .setCancelable(true)
+                                            .create();
+                                    dialog.setCanceledOnTouchOutside(true);
+                                    dialog.show();
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
     }
 }
