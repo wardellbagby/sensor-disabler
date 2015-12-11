@@ -39,6 +39,8 @@
     <string name="mock_sensor_radio_button">Mock sensor values</string>
     <string name="menu_freeload">Freeload</string>
     <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
+    <string name="menu_settings">Settings</string>
+    <string name="app_icon_content_desc">Application Icon</string>
     <string-array name="accelerometer_values">
         <item>Acceleration X (m/s²):</item>
         <item>Acceleration Y (m/s²):</item>
@@ -119,6 +121,11 @@
     </string-array>
     <string-array name="step_counter_values">
         <item>Steps (steps since last reboot):</item>
+    </string-array>
+    <string-array name="app_spinner">
+        <item>All Apps</item>
+        <item>Blacklisted Apps</item>
+        <item>Whitelisted Apps</item>
     </string-array>
 
 

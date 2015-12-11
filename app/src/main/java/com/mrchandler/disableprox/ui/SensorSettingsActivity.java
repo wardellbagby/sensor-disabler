@@ -13,6 +13,7 @@
 package com.mrchandler.disableprox.ui;
 
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -46,6 +47,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
 
     private static final String TAG = SensorSettingsActivity.class.getSimpleName();
     static final String CURRENT_FRAGMENT = "currentFragment";
+    static final String SETTINGS_FRAGMENT = "settingFragment";
 
     SensorSettingsFragment currentFragment;
     IabHelper helper;
@@ -196,6 +198,9 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
                 } else {
                     prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
                 }
+                return true;
+            case R.id.settings:
+                startActivity(new Intent(this, AppSettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

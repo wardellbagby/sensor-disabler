@@ -47,6 +47,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.AppSettingsActivity" />
+
         <receiver
             android:name=".receiver.FireReceiver"
             android:exported="true"
