@@ -28,6 +28,8 @@ public final class Constants {
     public static final String PREFS_FILE_NAME = "com.mrchandler.disableprox_preferences";
     public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
     public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
+    public static final String PREFS_KEY_WHITELIST = "prefs_key_whitelist";
+    public static final String PREFS_KEY_BLACKLIST = "prefs_key_blacklist";
 
     public static final int SENSOR_STATUS_DO_NOTHING = 0;
     public static final int SENSOR_STATUS_REMOVE_SENSOR = 1;

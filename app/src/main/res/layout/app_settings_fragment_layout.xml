@@ -13,7 +13,7 @@
         app:mainColor="@color/primary"
         app:secondaryColor="@color/primary_accent" />
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/apps_spinner_cont"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
@@ -25,10 +25,17 @@
 
         <Spinner
             android:id="@+id/apps_spinner"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true" />
-    </RelativeLayout>
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"/>
+        <Spinner
+            android:id="@+id/sensor_spinner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"/>
+    </LinearLayout>
 
 
     <ListView

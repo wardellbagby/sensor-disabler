@@ -1,5 +1,6 @@
 package com.mrchandler.disableprox.ui;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +24,7 @@ import android.widget.TextView;
 
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
 import com.mrchandler.disableprox.R;
+import com.mrchandler.disableprox.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,7 +78,7 @@ public class AppSettingsFragment extends Fragment {
     }
 
     private void createInstalledAppsList() {
-        new AsyncTask<Void, Integer, Void>() {
+        new AsyncTask<Void, Pair<Integer, ApplicationInfoWrapper>, Void>() {
 
             List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(0);
 
@@ -87,11 +90,17 @@ public class AppSettingsFragment extends Fragment {
                 progressBar.startDeterminate();
             }
 
+            @SafeVarargs
             @Override
-            protected void onProgressUpdate(Integer... values) {
-                progressBar.setPercent((int) (((values[0] * 1.0f) / applicationInfos.size()) * 100));
+            protected final void onProgressUpdate(Pair<Integer, ApplicationInfoWrapper>... values) {
+                progressBar.setPercent((int) (((values[0].first * 1.0f) / (applicationInfos.size() - 1)) * 100));
+                installedApps.add(values[0].second);
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
             }
 
+            @SuppressWarnings("unchecked")
             @Override
             protected Void doInBackground(Void... params) {
 
@@ -99,8 +108,7 @@ public class AppSettingsFragment extends Fragment {
                     ApplicationInfo info = applicationInfos.get(i);
                     Drawable icon = info.loadIcon(packageManager);
                     CharSequence label = info.loadLabel(packageManager);
-                    installedApps.add(new ApplicationInfoWrapper(icon, label, info));
-                    publishProgress(i);
+                    publishProgress(Pair.create(i, new ApplicationInfoWrapper(icon, label, info)));
                 }
                 return null;
             }
@@ -108,17 +116,55 @@ public class AppSettingsFragment extends Fragment {
             @Override
             protected void onPostExecute(Void aVoid) {
                 Collections.sort(installedApps);
-                appListView.animate().alpha(100f).setDuration(250).start();
-                progressBar.animate().alpha(0f).setDuration(250).start();
-                appListView.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
+                appListView.animate().alpha(1f).setDuration(1500).setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        appListView.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                }).start();
+                progressBar.animate().alpha(0f).setDuration(6000).setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                }).start();
                 setAdapter();
             }
         }.execute();
     }
 
     private void setAdapter() {
-        adapter = new AppViewHolderAdapter(getContext(), android.R.layout.simple_list_item_1, installedApps);
+        adapter = new AppViewHolderAdapter(getContext(), android.R.layout.simple_list_item_1, installedApps, true);
         appListView.setAdapter(adapter);
     }
 
@@ -148,20 +194,24 @@ public class AppSettingsFragment extends Fragment {
     class AppViewHolder extends RecyclerView.ViewHolder {
         TextView label;
         ImageView icon;
+        ViewGroup listStatusCont;
 
         public AppViewHolder(View itemView) {
             super(itemView);
             label = (TextView) itemView.findViewById(R.id.app_label);
             icon = (ImageView) itemView.findViewById(R.id.app_icon);
+            listStatusCont = (ViewGroup) itemView.findViewById(R.id.app_list_status_cont);
         }
     }
 
     class AppViewHolderAdapter extends ArrayAdapter<ApplicationInfoWrapper> implements SectionIndexer {
 
         Character[] sectionsToChar = new Character[0];
+        boolean showListedStatus;
 
-        public AppViewHolderAdapter(Context context, int resource, List<ApplicationInfoWrapper> objects) {
+        public AppViewHolderAdapter(Context context, int resource, List<ApplicationInfoWrapper> objects, boolean showListedStatus) {
             super(context, resource, objects);
+            this.showListedStatus = showListedStatus;
         }
 
         @Override
