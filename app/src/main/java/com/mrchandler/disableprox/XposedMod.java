@@ -6,6 +6,7 @@ import android.hardware.SensorEventListener;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.mrchandler.disableprox.util.Constants;
@@ -13,8 +14,10 @@ import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -27,6 +30,7 @@ import static de.robv.android.xposed.XposedHelpers.findClass;
 
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     private static XSharedPreferences sharedPreferences;
+    private static Map<String, Boolean> shouldAppHaltMap = new HashMap<>();
 
     /**
      * Shout out to abusalimov for his Light Sensor fix that inspired this app.
@@ -49,7 +53,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     /**
      * Disable by changing the data that the SensorManager gives listeners.
      **/
-    void disableSystemSensorManager(LoadPackageParam lpparam) {
+    void disableSystemSensorManager(final LoadPackageParam lpparam) {
         // Alright, so we start by creating a reference to the class that handles sensors.
         final Class<?> systemSensorManager = findClass(
                 "android.hardware.SystemSensorManager", lpparam.classLoader);
@@ -66,7 +70,15 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
                             Sensor sensor = (Sensor) param.args[0];
-                            if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+
+                            boolean halting = shouldAppHalt(lpparam.packageName, sensor);
+                            if (halting) {
+                                Log.e(lpparam.packageName, "App is halting for sensor: " + sensor.getName());
+                            } else {
+                                Log.e(lpparam.packageName, "App is not halting for sensor: " + sensor.getName());
+                            }
+
+                            if (!halting && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                                 // Get the mock values from the settings.
                                 float[] values = getSensorValues(sensor);
 
@@ -97,7 +109,15 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     // in sHandleToSensor and a float[] of values that should be applied to that sensor.
                     int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                     Sensor sensor = sensors.get(handle);
-                    if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+
+                    boolean halting = shouldAppHalt(lpparam.packageName, sensor);
+                    if (halting) {
+                        Log.e(lpparam.packageName, "App is halting for sensor: " + sensor.getName());
+                    } else {
+                        Log.e(lpparam.packageName, "App is not halting for sensor: " + sensor.getName());
+                    }
+
+                    if (!halting && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                         float[] values = getSensorValues(sensor);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
                         and some sensors (looking at you, Proximity) only use one index in the array
@@ -162,7 +182,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     Iterator<Sensor> iterator = fullSensorList.iterator();
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
-                        if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
+                        if (!shouldAppHalt(lpparam.packageName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
                             iterator.remove();
                         }
                     }
@@ -204,6 +224,51 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         }
         return mockValuesFloats;
     }
+
+    boolean isWhitelistEnabled() {
+        sharedPreferences.reload();
+        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, "blacklist").equalsIgnoreCase("whitelist");
+    }
+
+    boolean isBlacklistEnabled() {
+        return !isWhitelistEnabled();
+    }
+
+    boolean isAppBlacklisted(String packageName, Sensor sensor) {
+        sharedPreferences.reload();
+        Log.e("Prefs key", SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
+                packageName,
+                false));
+        return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
+                        packageName,
+                        false),
+                false);
+    }
+
+    boolean isAppWhitelisted(String packageName, Sensor sensor) {
+        sharedPreferences.reload();
+
+        return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
+                        packageName,
+                        true),
+                false);
+    }
+
+    private boolean shouldAppHalt(String packageName, Sensor sensor) {
+        if (isWhitelistEnabled()) {
+            if (!isAppWhitelisted(packageName, sensor)) {
+                return true;
+            }
+        } else {
+            if (isBlacklistEnabled()) {
+                if (isAppBlacklisted(packageName, sensor)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Used for delegating a false Sensor value to registered sensor listeners.

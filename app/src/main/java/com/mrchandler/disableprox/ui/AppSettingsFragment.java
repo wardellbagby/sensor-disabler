@@ -2,6 +2,7 @@ package com.mrchandler.disableprox.ui;
 
 import android.animation.Animator;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
@@ -15,16 +16,15 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
 import com.mrchandler.disableprox.R;
-import com.mrchandler.disableprox.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,75 +48,13 @@ public class AppSettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.app_settings_fragment_layout, container, false);
         packageManager = getContext().getPackageManager();
-        appListView = (ListView) rootView.findViewById(R.id.app_recycler_view);
+        appListView = (ListView) rootView.findViewById(R.id.app_list_view);
         appListView.setFastScrollEnabled(true);
         progressBar = (AnimatedCircleLoadingView) rootView.findViewById(R.id.progress_bar);
-        Spinner spinner = (Spinner) rootView.findViewById(R.id.apps_spinner);
-        spinner.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.app_spinner)) {
+        progressBar.setAnimationListener(new AnimatedCircleLoadingView.AnimationListener() {
             @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_spinner_item, parent, false);
-                }
-                TextView textView = (TextView) convertView;
-                textView.setText(getItem(position));
-                textView.setTextAppearance(getContext(), android.R.style.TextAppearance_DeviceDefault_Widget_ActionBar_Title);
-                return textView;
-            }
-
-            @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_spinner_dropdown_item, parent, false);
-                }
-                ((TextView) convertView).setText(getItem(position));
-                return convertView;
-            }
-        });
-        createInstalledAppsList();
-        return rootView;
-    }
-
-    private void createInstalledAppsList() {
-        new AsyncTask<Void, Pair<Integer, ApplicationInfoWrapper>, Void>() {
-
-            List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(0);
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                appListView.setVisibility(View.INVISIBLE);
-                progressBar.setVisibility(View.VISIBLE);
-                progressBar.startDeterminate();
-            }
-
-            @SafeVarargs
-            @Override
-            protected final void onProgressUpdate(Pair<Integer, ApplicationInfoWrapper>... values) {
-                progressBar.setPercent((int) (((values[0].first * 1.0f) / (applicationInfos.size() - 1)) * 100));
-                installedApps.add(values[0].second);
-                if (adapter != null) {
-                    adapter.notifyDataSetChanged();
-                }
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            protected Void doInBackground(Void... params) {
-
-                for (int i = 0; i < applicationInfos.size(); i++) {
-                    ApplicationInfo info = applicationInfos.get(i);
-                    Drawable icon = info.loadIcon(packageManager);
-                    CharSequence label = info.loadLabel(packageManager);
-                    publishProgress(Pair.create(i, new ApplicationInfoWrapper(icon, label, info)));
-                }
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                Collections.sort(installedApps);
-                appListView.animate().alpha(1f).setDuration(1500).setListener(new Animator.AnimatorListener() {
+            public void onAnimationEnd() {
+                appListView.animate().alpha(1f).setDuration(500).setListener(new Animator.AnimatorListener() {
                     @Override
                     public void onAnimationStart(Animator animation) {
 
@@ -137,7 +75,7 @@ public class AppSettingsFragment extends Fragment {
 
                     }
                 }).start();
-                progressBar.animate().alpha(0f).setDuration(6000).setListener(new Animator.AnimatorListener() {
+                progressBar.animate().alpha(0f).setDuration(500).setListener(new Animator.AnimatorListener() {
                     @Override
                     public void onAnimationStart(Animator animation) {
 
@@ -158,14 +96,71 @@ public class AppSettingsFragment extends Fragment {
 
                     }
                 }).start();
+            }
+        });
+        createInstalledAppsList();
+        return rootView;
+    }
+
+    private void createInstalledAppsList() {
+        new AsyncTask<Void, Pair<Integer, ApplicationInfoWrapper>, Void>() {
+
+            List<ApplicationInfo> applicationInfos = packageManager.getInstalledApplications(0);
+
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                appListView.setVisibility(View.INVISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
+                progressBar.startDeterminate();
+                }
+
+            @SafeVarargs
+            @Override
+            protected final void onProgressUpdate(Pair<Integer, ApplicationInfoWrapper>... values) {
+                progressBar.setPercent((int) (((values[0].first * 1.0f) / (applicationInfos.size() - 2)) * 100));
+                installedApps.add(values[0].second);
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+                }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                for (int i = 0; i < applicationInfos.size(); i++) {
+                    ApplicationInfo info = applicationInfos.get(i);
+                    Drawable icon = info.loadIcon(packageManager);
+                    CharSequence label = info.loadLabel(packageManager);
+                    publishProgress(Pair.create(i, new ApplicationInfoWrapper(icon, label, info)));
+                    }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                Collections.sort(installedApps);
                 setAdapter();
+                progressBar.setPercent(100);
             }
         }.execute();
     }
 
+
     private void setAdapter() {
         adapter = new AppViewHolderAdapter(getContext(), android.R.layout.simple_list_item_1, installedApps, true);
         appListView.setAdapter(adapter);
+        appListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                ApplicationInfoWrapper appInfoWrapper = adapter.getItem(position);
+                Intent blacklistIntent = new Intent(getActivity(), BlocklistActivity.class);
+                blacklistIntent.putExtra("appPackage", appInfoWrapper.applicationInfo.packageName);
+                blacklistIntent.putExtra("appLabel", appInfoWrapper.label.toString()); //TODO Convert to constants.
+                startActivity(blacklistIntent);
+            }
+        });
     }
 
     class ApplicationInfoWrapper implements Comparable<ApplicationInfoWrapper> {
@@ -194,13 +189,11 @@ public class AppSettingsFragment extends Fragment {
     class AppViewHolder extends RecyclerView.ViewHolder {
         TextView label;
         ImageView icon;
-        ViewGroup listStatusCont;
 
         public AppViewHolder(View itemView) {
             super(itemView);
             label = (TextView) itemView.findViewById(R.id.app_label);
             icon = (ImageView) itemView.findViewById(R.id.app_icon);
-            listStatusCont = (ViewGroup) itemView.findViewById(R.id.app_list_status_cont);
         }
     }
 

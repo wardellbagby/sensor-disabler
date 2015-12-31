@@ -73,6 +73,7 @@ public final class SensorUtil {
         return labels;
     }
 
+    //All are sorta guesstimations and what I know about some sensors.
     public static float getMinimumValueForSensor(Sensor sensor) {
         float minimumValue;
         switch (sensor.getType()) {
@@ -101,6 +102,10 @@ public final class SensorUtil {
 
     public static String generateUniqueSensorMockValuesKey(Sensor sensor) {
         return generateUniqueSensorKey(sensor) + "_values";
+    }
+
+    public static String generateUniqueSensorPackageBasedKey(Sensor sensor, String packageName, boolean whitelisted) {
+        return generateUniqueSensorKey(sensor) + '_' + packageName + ((whitelisted) ? "_whitelisted" : "_blacklisted");
     }
 
     public static Sensor getSensorFromUniqueSensorKey(Context context, String key) {

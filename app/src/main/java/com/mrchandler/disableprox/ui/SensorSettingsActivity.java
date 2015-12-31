@@ -200,7 +200,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
                 }
                 return true;
             case R.id.settings:
-                startActivity(new Intent(this, AppSettingsActivity.class));
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

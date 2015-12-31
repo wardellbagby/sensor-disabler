@@ -41,6 +41,9 @@
     <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
     <string name="menu_settings">Settings</string>
     <string name="app_icon_content_desc">Application Icon</string>
+    <string name="blacklist_check_all">Check All</string>
+    <string name="blacklist_title">Blacklist</string>
+    <string name="whitelist_title">Whitelist</string>
     <string-array name="accelerometer_values">
         <item>Acceleration X (m/s²):</item>
         <item>Acceleration Y (m/s²):</item>
@@ -127,6 +130,8 @@
         <item>Blacklisted Apps</item>
         <item>Whitelisted Apps</item>
     </string-array>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="action_settings">Settings</string>
 
 
 </resources>

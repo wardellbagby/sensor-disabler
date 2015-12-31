@@ -46,8 +46,8 @@
                 <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
             </intent-filter>
         </activity>
-
         <activity android:name=".ui.AppSettingsActivity" />
+        <activity android:name=".ui.BlocklistActivity" />
 
         <receiver
             android:name=".receiver.FireReceiver"
@@ -60,6 +60,10 @@
                 <action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
             </intent-filter>
         </receiver>
+
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
     </application>
 
 </manifest>

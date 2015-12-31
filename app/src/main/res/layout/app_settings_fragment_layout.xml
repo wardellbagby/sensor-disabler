@@ -13,37 +13,12 @@
         app:mainColor="@color/primary"
         app:secondaryColor="@color/primary_accent" />
 
-    <LinearLayout
-        android:id="@+id/apps_spinner_cont"
-        android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:background="@color/primary_light">
-
-        <Spinner
-            android:id="@+id/apps_spinner"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"/>
-        <Spinner
-            android:id="@+id/sensor_spinner"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"/>
-    </LinearLayout>
-
-
     <ListView
-        android:id="@+id/app_recycler_view"
+        android:id="@+id/app_list_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbarStyle="outsideOverlay"
-        android:layout_below="@id/apps_spinner_cont"
+        android:layout_alignParentTop="true"
         android:fastScrollEnabled="true" />
 
 

@@ -16,32 +16,11 @@
 
         android:contentDescription="@string/app_icon_content_desc" />
 
-    <LinearLayout
-        android:id="@+id/app_list_status_cont"
-        android:layout_width="wrap_content"
-        android:layout_height="75dp"
-        android:layout_alignParentRight="true"
-        android:gravity="right|center_vertical"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_check_white_24dp" />
-
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_error_outline_white_24dp" />
-    </LinearLayout>
-
     <TextView
         android:id="@+id/app_label"
         android:layout_width="wrap_content"
         android:layout_height="75dp"
-        android:layout_toLeftOf="@id/app_list_status_cont"
         android:layout_toRightOf="@id/app_icon"
-        android:layout_weight="1"
         android:gravity="center_vertical"
         android:padding="8dp"
         android:text="New Text" />
