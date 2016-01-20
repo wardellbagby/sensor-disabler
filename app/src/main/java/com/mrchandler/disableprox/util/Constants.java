@@ -34,6 +34,13 @@ public final class Constants {
     public static final int SENSOR_STATUS_REMOVE_SENSOR = 1;
     public static final int SENSOR_STATUS_MOCK_VALUES = 2;
 
+    public static final String INTENT_APP_PACKAGE = "appPackage";
+    public static final String INTENT_APP_LABEL = "appLabel";
+
+    public static final String BLACKLIST = "blacklist";
+    public static final String WHITELIST = "whitelist";
+
+
     /**
      * Determines the "versionCode" in the {@code AndroidManifest}.
      *

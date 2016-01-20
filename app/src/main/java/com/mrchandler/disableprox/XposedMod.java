@@ -6,18 +6,16 @@ import android.hardware.SensorEventListener;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
 import android.util.SparseArray;
 
+import com.mrchandler.disableprox.util.BlocklistType;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
@@ -30,7 +28,6 @@ import static de.robv.android.xposed.XposedHelpers.findClass;
 
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     private static XSharedPreferences sharedPreferences;
-    private static Map<String, Boolean> shouldAppHaltMap = new HashMap<>();
 
     /**
      * Shout out to abusalimov for his Light Sensor fix that inspired this app.
@@ -53,7 +50,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     /**
      * Disable by changing the data that the SensorManager gives listeners.
      **/
-    void disableSystemSensorManager(final LoadPackageParam lpparam) {
+    private void disableSystemSensorManager(final LoadPackageParam lpparam) {
         // Alright, so we start by creating a reference to the class that handles sensors.
         final Class<?> systemSensorManager = findClass(
                 "android.hardware.SystemSensorManager", lpparam.classLoader);
@@ -71,14 +68,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         protected void beforeHookedMethod(MethodHookParam param) {
                             Sensor sensor = (Sensor) param.args[0];
 
-                            boolean halting = shouldAppHalt(lpparam.packageName, sensor);
-                            if (halting) {
-                                Log.e(lpparam.packageName, "App is halting for sensor: " + sensor.getName());
-                            } else {
-                                Log.e(lpparam.packageName, "App is not halting for sensor: " + sensor.getName());
-                            }
-
-                            if (!halting && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                            //Use processName here always. Not packageName.
+                            if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                                 // Get the mock values from the settings.
                                 float[] values = getSensorValues(sensor);
 
@@ -110,14 +101,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                     Sensor sensor = sensors.get(handle);
 
-                    boolean halting = shouldAppHalt(lpparam.packageName, sensor);
-                    if (halting) {
-                        Log.e(lpparam.packageName, "App is halting for sensor: " + sensor.getName());
-                    } else {
-                        Log.e(lpparam.packageName, "App is not halting for sensor: " + sensor.getName());
-                    }
-
-                    if (!halting && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                    if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                         float[] values = getSensorValues(sensor);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
                         and some sensors (looking at you, Proximity) only use one index in the array
@@ -170,7 +154,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     /**
      * Disable by removing the sensor data from the SensorManager. Apps will think the sensor does not exist.
      **/
-    void removeSensors(final LoadPackageParam lpparam) {
+    private void removeSensors(final LoadPackageParam lpparam) {
         //This is the base method that gets called whenever the sensors are queried. All roads lead back to getFullSensorList!
         XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager", lpparam.classLoader, "getFullSensorList", new XC_MethodHook() {
             @Override
@@ -192,7 +176,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         });
     }
 
-    int getSensorStatus(Sensor sensor) {
+    private int getSensorStatus(Sensor sensor) {
         //Always assume that the user wants the app to do nothing, since this accesses every sensor.
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
         String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
@@ -204,7 +188,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         return sharedPreferences.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
     }
 
-    float[] getSensorValues(Sensor sensor) {
+    private float[] getSensorValues(Sensor sensor) {
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
         String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
         String[] mockValuesStrings;
@@ -225,32 +209,29 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         return mockValuesFloats;
     }
 
-    boolean isWhitelistEnabled() {
+    private boolean isWhitelistEnabled() {
         sharedPreferences.reload();
         return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, "blacklist").equalsIgnoreCase("whitelist");
     }
 
-    boolean isBlacklistEnabled() {
+    private boolean isBlacklistEnabled() {
         return !isWhitelistEnabled();
     }
 
-    boolean isAppBlacklisted(String packageName, Sensor sensor) {
+    private boolean isAppBlacklisted(String packageName, Sensor sensor) {
         sharedPreferences.reload();
-        Log.e("Prefs key", SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
-                packageName,
-                false));
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
                         packageName,
-                        false),
+                        BlocklistType.BLACKLIST),
                 false);
     }
 
-    boolean isAppWhitelisted(String packageName, Sensor sensor) {
+    private boolean isAppWhitelisted(String packageName, Sensor sensor) {
         sharedPreferences.reload();
 
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
                         packageName,
-                        true),
+                        BlocklistType.WHITELIST),
                 false);
     }
 
@@ -273,7 +254,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     /**
      * Used for delegating a false Sensor value to registered sensor listeners.
      **/
-    class InjectedSensorEventListener implements SensorEventListener {
+    private class InjectedSensorEventListener implements SensorEventListener {
 
         SensorEventListener oldListener;
 

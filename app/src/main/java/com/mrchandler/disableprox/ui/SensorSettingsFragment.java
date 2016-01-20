@@ -196,22 +196,19 @@ public class SensorSettingsFragment extends Fragment {
             SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
             String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
+            String[] mockValuesStringArray;
             int enabledStatus = prefs.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
-            //TODO Check for existence in prefs before creating a default.
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < valueSettings.size(); i++) {
-                builder.append((valueSettings.get(i).getMin() / 10.0f));
-                if (i != valueSettings.size() - 1) {
-                    builder.append(':');
+
+            if (prefs.contains(mockValuesKey)) {
+                mockValuesStringArray = prefs.getString(mockValuesKey, "").split(":", 0);
+            } else {
+                mockValuesStringArray = new String[valueSettings.size()];
+                for (int i = 0; i < valueSettings.size(); i++) {
+                    mockValuesStringArray[i] = "" + valueSettings.get(i).getMin() / 10.0f;
                 }
             }
-            String defaultValue = builder.toString();
-            String[] mockValuesStringArray;
-            if ("".equals(defaultValue)) {
-                mockValuesStringArray = new String[0];
-            } else {
-                mockValuesStringArray = prefs.getString(mockValuesKey, defaultValue).split(":", 0);
-            }
+
+            //TODO This could be better.
             float[] mockValues = new float[mockValuesStringArray.length];
             for (int i = 0; i < mockValuesStringArray.length; i++) {
                 mockValues[i] = Float.parseFloat(mockValuesStringArray[i]);

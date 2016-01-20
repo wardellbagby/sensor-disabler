@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
 import com.mrchandler.disableprox.R;
+import com.mrchandler.disableprox.util.Constants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -113,7 +114,7 @@ public class AppSettingsFragment extends Fragment {
                 appListView.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.startDeterminate();
-                }
+            }
 
             @SafeVarargs
             @Override
@@ -123,7 +124,7 @@ public class AppSettingsFragment extends Fragment {
                 if (adapter != null) {
                     adapter.notifyDataSetChanged();
                 }
-                }
+            }
 
             @SuppressWarnings("unchecked")
             @Override
@@ -134,7 +135,7 @@ public class AppSettingsFragment extends Fragment {
                     Drawable icon = info.loadIcon(packageManager);
                     CharSequence label = info.loadLabel(packageManager);
                     publishProgress(Pair.create(i, new ApplicationInfoWrapper(icon, label, info)));
-                    }
+                }
                 return null;
             }
 
@@ -156,8 +157,8 @@ public class AppSettingsFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 ApplicationInfoWrapper appInfoWrapper = adapter.getItem(position);
                 Intent blacklistIntent = new Intent(getActivity(), BlocklistActivity.class);
-                blacklistIntent.putExtra("appPackage", appInfoWrapper.applicationInfo.packageName);
-                blacklistIntent.putExtra("appLabel", appInfoWrapper.label.toString()); //TODO Convert to constants.
+                blacklistIntent.putExtra(Constants.INTENT_APP_PACKAGE, appInfoWrapper.applicationInfo.packageName);
+                blacklistIntent.putExtra(Constants.INTENT_APP_LABEL, appInfoWrapper.label.toString());
                 startActivity(blacklistIntent);
             }
         });

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:dependency="prefs_key_tasker">
     <PreferenceCategory android:title="Block Settings">
         <ListPreference
-            android:dialogTitle="Choose List type"
+            android:dialogTitle="Choose Blocking Type"
             android:entries="@array/blocking_lists"
             android:entryValues="@array/blocking_lists_values"
             android:key="enabled_blocking_list"
             android:summary="Choose whether to use a blacklist or whitelist approach in blocking apps from being affected by the Sensor Disabler."
             android:title="Set enabled blocking list type." />
-        <PreferenceScreen android:title="Blocklist Settings">
-
+        <PreferenceScreen android:title="Blocking Settings">
             <intent
                 android:targetClass="com.mrchandler.disableprox.ui.AppSettingsActivity"
                 android:targetPackage="com.mrchandler.disableprox" />

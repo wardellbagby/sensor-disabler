@@ -130,12 +130,6 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
         //Has to be done to access with XSharedPreferences.
         prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
 
-        //freeloadTextView = (TextView) findViewById(R.id.freeload);
-        if (prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false)) {
-            // TODO Show that freeloading is turned on.
-        } else if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
-            //TODO Do opposite of the other if...
-        }
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Tasker IAP?
@@ -145,6 +139,8 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
                 public void onIabSetupFinished(IabResult result) {
                     if (!result.isSuccess()) {
                         Log.d(TAG, "Unable to get up In-App Billing. Oh well.");
+                        prefs.edit().putBoolean(Constants.PREFS_KEY_FREELOAD, true).apply();
+                        return;
                     }
                     helper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
                         @Override
@@ -176,12 +172,6 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = new MenuInflater(this);
         inflater.inflate(R.menu.settings_menu, menu);
-        MenuItem freeload = menu.findItem(R.id.freeload);
-        if (prefs.contains(Constants.PREFS_KEY_FREELOAD)) {
-            freeload.setChecked(true);
-        } else {
-            freeload.setChecked(false);
-        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -191,14 +181,6 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
             return true;
         }
         switch (item.getItemId()) {
-            case R.id.freeload:
-                item.setChecked(!item.isChecked());
-                if (item.isChecked()) {
-                    prefs.edit().putBoolean(Constants.PREFS_KEY_FREELOAD, true).apply();
-                } else {
-                    prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
-                }
-                return true;
             case R.id.settings:
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;

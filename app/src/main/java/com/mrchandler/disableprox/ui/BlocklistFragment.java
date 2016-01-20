@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.mrchandler.disableprox.R;
+import com.mrchandler.disableprox.util.BlocklistType;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.SensorUtil;
 
@@ -33,20 +34,20 @@ public class BlocklistFragment extends Fragment {
 
     private static final String APP_PACKAGE = "appPackage";
     private static final String APP_LABEL = "appLabel";
-    private static final String WHITELIST = "whitelist";
+    private static final String BLOCKLIST_TYPE = "whitelist";
 
     private ImageView appIcon;
     private ArrayList<CheckableSensor> checkableSensors;
     private RecyclerView.Adapter<SensorViewHolder> sensorAdapter;
     private String packageName;
-    private boolean whitelisted;
+    private BlocklistType type;
 
 
-    public static BlocklistFragment newInstance(String appPackage, String appLabel, boolean whitelist) {
+    public static BlocklistFragment newInstance(String appPackage, String appLabel, BlocklistType type) {
         Bundle arguments = new Bundle(2);
         arguments.putString(APP_PACKAGE, appPackage);
         arguments.putString(APP_LABEL, appLabel);
-        arguments.putBoolean(WHITELIST, whitelist);
+        arguments.putSerializable(BLOCKLIST_TYPE, type);
         BlocklistFragment blocklistFragment = new BlocklistFragment();
         blocklistFragment.setArguments(arguments);
         return blocklistFragment;
@@ -55,7 +56,7 @@ public class BlocklistFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.blacklist_dialog_fragment_layout, container, false);
+        View rootView = inflater.inflate(R.layout.blocklist_dialog_fragment_layout, container, false);
         final RecyclerView sensorListView = (RecyclerView) rootView.findViewById(R.id.sensor_recycler_view);
         sensorListView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false));
         sensorListView.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
@@ -68,11 +69,18 @@ public class BlocklistFragment extends Fragment {
             packageName = arguments.getString(APP_PACKAGE);
             setAppIcon(packageName);
             appLabel.setText(arguments.getString(APP_LABEL));
-            whitelisted = arguments.getBoolean(WHITELIST);
-            if (whitelisted) {
-                getActivity().setTitle(R.string.whitelist_title);
-            } else {
-                getActivity().setTitle(R.string.blacklist_title);
+            type = (BlocklistType) arguments.getSerializable(BLOCKLIST_TYPE);
+            if (type == null) {
+                type = BlocklistType.BLACKLIST;
+            }
+            switch (type) {
+                case WHITELIST:
+                    getActivity().setTitle(R.string.whitelist_title);
+                    break;
+                default:
+                case BLACKLIST:
+                    getActivity().setTitle(R.string.blacklist_title);
+                    break;
             }
         }
         SensorManager sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
@@ -83,7 +91,7 @@ public class BlocklistFragment extends Fragment {
         sensorListView.setAdapter(sensorAdapter = new RecyclerView.Adapter<SensorViewHolder>() {
             @Override
             public SensorViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_blacklist_item_layout, parent, false);
+                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_blocklist_item_layout, parent, false);
                 return new SensorViewHolder(view);
             }
 
@@ -128,14 +136,14 @@ public class BlocklistFragment extends Fragment {
 
     private boolean getStatus(Sensor sensor) {
         SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
-        String key = SensorUtil.generateUniqueSensorPackageBasedKey(sensor, packageName, whitelisted);
+        String key = SensorUtil.generateUniqueSensorPackageBasedKey(sensor, packageName, type);
         return prefs.getBoolean(key, false);
     }
 
     private void saveStatus(boolean newStatus, int position) {
         SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
         CheckableSensor checkableSensor = checkableSensors.get(position);
-        String key = SensorUtil.generateUniqueSensorPackageBasedKey(checkableSensor.sensor, packageName, whitelisted);
+        String key = SensorUtil.generateUniqueSensorPackageBasedKey(checkableSensor.sensor, packageName, type);
         prefs.edit().putBoolean(key, newStatus).apply();
     }
 

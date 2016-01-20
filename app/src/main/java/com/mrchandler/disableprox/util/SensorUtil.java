@@ -104,8 +104,9 @@ public final class SensorUtil {
         return generateUniqueSensorKey(sensor) + "_values";
     }
 
-    public static String generateUniqueSensorPackageBasedKey(Sensor sensor, String packageName, boolean whitelisted) {
-        return generateUniqueSensorKey(sensor) + '_' + packageName + ((whitelisted) ? "_whitelisted" : "_blacklisted");
+    public static String generateUniqueSensorPackageBasedKey(Sensor sensor, String packageName, BlocklistType type) {
+        //TODO Expand this out if I ever come up with some sort of extra kind of blocking list.
+        return generateUniqueSensorKey(sensor) + '_' + packageName + ((type == BlocklistType.WHITELIST) ? "_whitelisted" : "_blacklisted");
     }
 
     public static Sensor getSensorFromUniqueSensorKey(Context context, String key) {
