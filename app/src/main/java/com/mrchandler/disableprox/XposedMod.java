@@ -166,7 +166,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     Iterator<Sensor> iterator = fullSensorList.iterator();
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
-                        if (!shouldAppHalt(lpparam.packageName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
+                        if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
                             iterator.remove();
                         }
                     }
@@ -211,7 +211,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
 
     private boolean isWhitelistEnabled() {
         sharedPreferences.reload();
-        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, "blacklist").equalsIgnoreCase("whitelist");
+        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, BlocklistType.BLACKLIST.getValue()).equalsIgnoreCase(BlocklistType.WHITELIST.getValue());
     }
 
     private boolean isBlacklistEnabled() {

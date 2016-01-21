@@ -169,7 +169,8 @@ public class SensorSettingsFragment extends Fragment {
                 .setMessage("Name: " + sensor.getName() + "\n"
                         + "Type: " + SensorUtil.getHumanStringType(sensor) + "\n"
                         + "Vendor: " + sensor.getVendor() + "\n"
-                        + "Range: " + sensor.getMaximumRange() + "\n")
+                        + "Range: " + sensor.getMaximumRange() + "\n\n"
+                        + SensorUtil.getDescription(sensor) + "\n")
                 .show();
     }
 

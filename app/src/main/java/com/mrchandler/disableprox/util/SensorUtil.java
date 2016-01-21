@@ -213,4 +213,53 @@ public final class SensorUtil {
                 return getHumanStringType(sensor) == null;
         }
     }
+
+    public static String getDescription(Sensor sensor) {
+        switch (sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                return "Measures the acceleration force in m/s² that is applied to a device on all three physical axes (x, y, and z), including the force of gravity.";
+
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                return "Measures the ambient room temperature in degrees Celsius (°C). See note below.";
+
+            case Sensor.TYPE_GRAVITY:
+                return "Measures the force of gravity in m/s² that is applied to a device on all three physical axes (x, y, z).";
+
+            case Sensor.TYPE_GYROSCOPE:
+                return "Measures a device's rate of rotation in rad/s around each of the three physical axes (x, y, and z).";
+
+            case Sensor.TYPE_HEART_RATE:
+                return "Measures heart rate.";
+
+            case Sensor.TYPE_LIGHT:
+                return "Measures the ambient light level (illumination) in lx.";
+
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                return "Measures the acceleration force in m/s² that is applied to a device on all three physical axes (x, y, and z), excluding the force of gravity.";
+
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                return "Measures the ambient geomagnetic field for all three physical axes (x, y, z) in μT.";
+
+            case Sensor.TYPE_PRESSURE:
+                return "Measures the ambient air pressure in hPa or mbar.";
+
+            case Sensor.TYPE_PROXIMITY:
+                return "Measures the proximity of an object in cm relative to the view screen of a device. This sensor is typically used to determine whether a handset is being held up to a person's ear.";
+
+            case Sensor.TYPE_RELATIVE_HUMIDITY:
+                return "Measures the relative ambient humidity in percent (%).";
+
+            case Sensor.TYPE_ROTATION_VECTOR:
+                return "Measures the orientation of a device by providing the three elements of the device's rotation vector.";
+
+            case Sensor.TYPE_ORIENTATION:
+                return "Measures degrees of rotation that a device makes around all three physical axes (x, y, z). ";
+
+            case Sensor.TYPE_TEMPERATURE:
+                return "Measures the temperature of the device in degrees Celsius (°C). ";
+
+            default:
+                return "Information about this sensor is unavailable.";
+        }
+    }
 }
