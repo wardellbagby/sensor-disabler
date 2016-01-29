@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:dependency="prefs_key_tasker">
-    <PreferenceCategory android:title="Block Settings">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="Block Settings"
+        android:key="block_settings">
         <ListPreference
             android:dialogTitle="Choose Blocking Type"
             android:entries="@array/blocking_lists"

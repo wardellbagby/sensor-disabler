@@ -19,7 +19,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.melnykov.fab.FloatingActionButton;
 import com.mrchandler.disableprox.R;
 import com.mrchandler.disableprox.util.BlocklistType;
 import com.mrchandler.disableprox.util.Constants;
@@ -41,6 +43,7 @@ public class BlocklistFragment extends Fragment {
     private RecyclerView.Adapter<SensorViewHolder> sensorAdapter;
     private String packageName;
     private BlocklistType type;
+    private SharedPreferences prefs;
 
 
     public static BlocklistFragment newInstance(String appPackage, String appLabel, BlocklistType type) {
@@ -63,6 +66,16 @@ public class BlocklistFragment extends Fragment {
         appIcon = (ImageView) rootView.findViewById(R.id.app_icon);
         TextView appLabel = (TextView) rootView.findViewById(R.id.app_label);
         CheckBox checkAll = (CheckBox) rootView.findViewById(R.id.blacklist_check_all);
+        FloatingActionButton fab = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (CheckableSensor checkableSensor : checkableSensors) {
+                    saveCheckableSensorToPrefs(checkableSensor);
+                }
+                Toast.makeText(getActivity(), "Settings saved successfully.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         if (getArguments() != null) {
             Bundle arguments = getArguments();
@@ -83,6 +96,7 @@ public class BlocklistFragment extends Fragment {
                     break;
             }
         }
+        prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
         SensorManager sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         checkableSensors = new ArrayList<>();
         for (Sensor s : sensorManager.getSensorList(Sensor.TYPE_ALL)) {
@@ -109,7 +123,6 @@ public class BlocklistFragment extends Fragment {
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         int currentPosition = sensorListView.getChildAdapterPosition(buttonView);
                         checkableSensors.get(currentPosition).isChecked = isChecked;
-                        saveStatus(isChecked, currentPosition);
                     }
                 });
             }
@@ -140,11 +153,9 @@ public class BlocklistFragment extends Fragment {
         return prefs.getBoolean(key, false);
     }
 
-    private void saveStatus(boolean newStatus, int position) {
-        SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
-        CheckableSensor checkableSensor = checkableSensors.get(position);
+    private void saveCheckableSensorToPrefs(CheckableSensor checkableSensor) {
         String key = SensorUtil.generateUniqueSensorPackageBasedKey(checkableSensor.sensor, packageName, type);
-        prefs.edit().putBoolean(key, newStatus).apply();
+        prefs.edit().putBoolean(key, checkableSensor.isChecked).apply();
     }
 
     private void setAppIcon(final String appPackage) {

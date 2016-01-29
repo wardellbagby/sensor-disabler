@@ -36,6 +36,7 @@ import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
+import com.mrchandler.disableprox.util.ProUtil;
 import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
@@ -133,27 +134,26 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Tasker IAP?
-        if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
+        if (!ProUtil.isPro(this)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
                 @Override
                 public void onIabSetupFinished(IabResult result) {
                     if (!result.isSuccess()) {
                         Log.d(TAG, "Unable to get up In-App Billing. Oh well.");
-                        prefs.edit().putBoolean(Constants.PREFS_KEY_FREELOAD, true).apply();
+                        ProUtil.setFreeloadStatus(SensorSettingsActivity.this, true);
                         return;
                     }
                     helper.queryInventoryAsync(new IabHelper.QueryInventoryFinishedListener() {
                         @Override
                         public void onQueryInventoryFinished(IabResult result, Inventory inv) {
                             if (result.isFailure()) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
+                                ProUtil.setProStatus(SensorSettingsActivity.this, false);
                                 return;
                             }
                             if (inv.hasPurchase(Constants.SKU_TASKER)) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
-                                prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
+                                ProUtil.setProStatus(SensorSettingsActivity.this, true);
                             } else {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
+                                ProUtil.setProStatus(SensorSettingsActivity.this, false);
                             }
                         }
                     });

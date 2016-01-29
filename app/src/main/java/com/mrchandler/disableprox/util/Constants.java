@@ -18,6 +18,8 @@ import com.mrchandler.disableprox.BuildConfig;
 
 public final class Constants {
 
+    //TODO If this file ends up being unwieldy, refactor into different files.
+
     public static final String LOG_TAG = "Disable Prox Sensor"; //$NON-NLS-1$
     public static final boolean IS_LOGGABLE = BuildConfig.DEBUG;
 

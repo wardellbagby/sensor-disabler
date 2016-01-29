@@ -28,6 +28,7 @@ import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.IabHelper;
 import com.mrchandler.disableprox.util.IabResult;
 import com.mrchandler.disableprox.util.Inventory;
+import com.mrchandler.disableprox.util.ProUtil;
 import com.mrchandler.disableprox.util.Purchase;
 import com.mrchandler.disableprox.util.SensorUtil;
 
@@ -164,7 +165,7 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
     private void initInAppBilling() {
         final IabHelper helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Tasker IAP?
-        if (!prefs.getBoolean(Constants.PREFS_KEY_TASKER, false)) {
+        if (!ProUtil.isPro(this)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
                 @Override
                 public void onIabSetupFinished(IabResult result) {
@@ -176,15 +177,14 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
                         @Override
                         public void onQueryInventoryFinished(IabResult result, Inventory inv) {
                             if (result.isFailure()) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
+                                ProUtil.setProStatus(TaskerSensorSettingsActivity.this, false);
                                 return;
                             }
                             if (inv.hasPurchase(Constants.SKU_TASKER)) {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
-                                prefs.edit().remove(Constants.PREFS_KEY_FREELOAD).apply();
+                                ProUtil.setProStatus(TaskerSensorSettingsActivity.this, true);
                             } else {
-                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, false).apply();
-                                if (!(prefs.contains(Constants.PREFS_KEY_FREELOAD) && prefs.getBoolean(Constants.PREFS_KEY_FREELOAD, false))) {
+                                ProUtil.setProStatus(TaskerSensorSettingsActivity.this, false);
+                                if (!ProUtil.isFreeloaded(TaskerSensorSettingsActivity.this)) {
                                     AlertDialog dialog = new AlertDialog.Builder(TaskerSensorSettingsActivity.this)
                                             .setTitle(R.string.iap_dialog_title)
                                             .setMessage(R.string.iap_dialog_message)
@@ -208,7 +208,7 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
                                                                 return;
                                                             }
                                                             if (info.getSku().equals(Constants.SKU_TASKER)) {
-                                                                prefs.edit().putBoolean(Constants.PREFS_KEY_TASKER, true).apply();
+                                                                ProUtil.setProStatus(TaskerSensorSettingsActivity.this, true);
                                                             }
                                                         }
                                                     });
