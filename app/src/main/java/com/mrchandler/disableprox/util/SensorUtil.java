@@ -3,6 +3,7 @@ package com.mrchandler.disableprox.util;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.support.annotation.Nullable;
 
 import com.mrchandler.disableprox.R;
 
@@ -91,6 +92,7 @@ public final class SensorUtil {
     }
 
     public static String generateUniqueSensorKey(Sensor sensor) {
+        //TODO Maybe use Sensor.toString?
         return sensor.getName()
                 + "|"
                 + sensor.getVendor()
@@ -129,9 +131,10 @@ public final class SensorUtil {
                 throw new IllegalArgumentException("Unable to get unique sensor from key.");
             }
         }
-        throw new IllegalArgumentException("Unable to get unique sensor from key.");
+        return null;
     }
 
+    @Nullable
     public static String getHumanStringType(Sensor sensor) {
         switch (sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
@@ -220,7 +223,7 @@ public final class SensorUtil {
                 return "Measures the acceleration force in m/s² that is applied to a device on all three physical axes (x, y, and z), including the force of gravity.";
 
             case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                return "Measures the ambient room temperature in degrees Celsius (°C). See note below.";
+                return "Measures the ambient room temperature in degrees Celsius (°C).";
 
             case Sensor.TYPE_GRAVITY:
                 return "Measures the force of gravity in m/s² that is applied to a device on all three physical axes (x, y, z).";

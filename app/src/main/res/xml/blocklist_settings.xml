@@ -10,7 +10,9 @@
             android:key="enabled_blocking_list"
             android:summary="Choose whether to use a blacklist or whitelist approach in blocking apps from being affected by the Sensor Disabler.\nBlacklisted apps will ignore the settings set here.\nWhitelisted apps will use the Sensor Disabler's settings, and non-whitelisted apps will ignore the Sensor Disabler's settings."
             android:title="Set enabled blocking list type." />
-        <PreferenceScreen android:title="Blocking Settings">
+        <PreferenceScreen
+            android:title="Blocking Settings"
+            android:key="blocking_list_settings">
             <intent
                 android:targetClass="com.mrchandler.disableprox.ui.AppSettingsActivity"
                 android:targetPackage="com.mrchandler.disableprox" />

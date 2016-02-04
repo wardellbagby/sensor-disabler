@@ -4,7 +4,7 @@ package com.mrchandler.disableprox.util;
  * @author Wardell
  */
 public enum BlocklistType {
-    BLACKLIST("blacklist"), WHITELIST("whitelist");
+    BLACKLIST("blacklist"), WHITELIST("whitelist"), NONE("none");
 
     String value;
 

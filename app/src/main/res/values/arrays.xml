@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="blocking_lists">
+        <item>None</item>
         <item>Blacklist</item>
         <item>Whitelist</item>
     </string-array>
     <string-array name="blocking_lists_values">
+        <item>none</item>
         <item>blacklist</item>
         <item>whitelist</item>
     </string-array>

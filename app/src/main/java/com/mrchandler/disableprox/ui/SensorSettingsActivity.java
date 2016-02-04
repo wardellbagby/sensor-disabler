@@ -13,10 +13,15 @@
 package com.mrchandler.disableprox.ui;
 
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -24,10 +29,12 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CheckBox;
 
 import com.melnykov.fab.FloatingActionButton;
 import com.melnykov.fab.ObservableScrollView;
@@ -47,6 +54,7 @@ import java.util.List;
 public class SensorSettingsActivity extends FragmentActivity implements SensorListFragment.OnSensorClickedListener {
 
     private static final String TAG = SensorSettingsActivity.class.getSimpleName();
+    private static final String XPOSED_PACKAGE = "de.robv.android.xposed.installer";
     static final String CURRENT_FRAGMENT = "currentFragment";
     static final String SETTINGS_FRAGMENT = "settingFragment";
 
@@ -133,7 +141,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
 
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
-        //Has the user purchased the Tasker IAP?
+        //Has the user purchased the Pro IAP?
         if (!ProUtil.isPro(this)) {
             helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
                 @Override
@@ -163,6 +171,35 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (!isPackageInstalled(XPOSED_PACKAGE, this) && !prefs.getBoolean(Constants.PREFS_KEY_NEVER_SHOW_XPOSED_INSTALLED, false)) {
+            final View view = LayoutInflater.from(this).inflate(R.layout.alert_dialog_xposed_not_installed_layout, null, false);
+            new AlertDialog.Builder(this)
+                    .setTitle("Xposed Not Installed")
+                    .setView(view)
+                    .setMessage(R.string.xposed_not_installed)
+                    .setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            CheckBox box = (CheckBox) view.findViewById(R.id.never_show_again_checkbox);
+                            prefs.edit().putBoolean(Constants.PREFS_KEY_NEVER_SHOW_XPOSED_INSTALLED, box.isChecked()).apply();
+                        }
+                    })
+                    .setNegativeButton("Uninstall", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Uri packageUri = Uri.parse("package:" + Constants.PACKAGE_NAME);
+                            startActivity(new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri));
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+    }
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         showDefaultSensorFragment();
@@ -182,7 +219,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
         }
         switch (item.getItemId()) {
             case R.id.settings:
-                startActivity(new Intent(this, SettingsActivity.class));
+                startActivity(new Intent(this, SettingsPreferenceActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -236,5 +273,15 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
 
     float[] getCurrentMockValues() {
         return currentFragment.getValues();
+    }
+
+    private static boolean isPackageInstalled(String packagename, Context context) {
+        PackageManager pm = context.getPackageManager();
+        try {
+            pm.getPackageInfo(packagename, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 }

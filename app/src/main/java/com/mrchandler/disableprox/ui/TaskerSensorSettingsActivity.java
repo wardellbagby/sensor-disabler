@@ -81,17 +81,8 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case PURCHASE_RESULT_CODE:
-                if (resultCode != RESULT_OK) {
-                    Toast.makeText(this, "Error making purchase.", Toast.LENGTH_SHORT).show();
-                    doNotSave = true;
-                    finish();
-                }
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-                break;
+        if (!helper.handleActivityResult(requestCode, resultCode, data)) {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 

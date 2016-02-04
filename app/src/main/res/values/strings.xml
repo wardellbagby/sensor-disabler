@@ -24,12 +24,11 @@
 
     <string name="iap_dialog_title">Unauthorized Action</string>
 
-    <string name="iap_dialog_message">This action is currently only available through an In App Purchase. Would you like
+    <string name="iap_dialog_message">This action is currently only available by purchases the Pro upgrade. Would you like
         to purchase it now?
     </string>
 
-    <string name="iap_dialog_more_information">If you would like to use this feature without paying for it, open up the module
-        settings in the Xposed Installer application and long click the Proximity Sensor switch.
+    <string name="iap_dialog_more_information">If you would like to use this feature without paying for it, open up Sensor Disabler, go to Settings, and check the Freeload option. Please consider paying in the future to support development!
     </string>
     <string name="menu_reset">Reset</string>
     <string name="menu_info">Info</string>
@@ -133,6 +132,8 @@
     <string name="title_activity_settings">Settings</string>
     <string name="action_settings">Settings</string>
     <string name="empty">Empty</string>
+    <string name="xposed_not_installed">You may not have Xposed installed. Without Xposed installed on your device, this app will not work correctly. If you are certain that you have Xposed installed, please ignore this message. If you do not have Xposed installed, or are unsure what Xposed is, please uninstall this application as it will not work for you.</string>
+    <string name="never_show_again">Never Show Again</string>
 
 
 </resources>

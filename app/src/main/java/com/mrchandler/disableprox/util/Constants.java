@@ -26,11 +26,15 @@ public final class Constants {
     public static final String PACKAGE_NAME = "com.mrchandler.disableprox";
 
     public static final String SKU_TASKER = "tasker_purchase";
+    public static final String SKU_DONATION_1 = "donation_1";
+    public static final String SKU_DONATION_5 = "donation_5";
+    public static final String SKU_DONATION_10 = "donation_10";
 
     public static final String PREFS_FILE_NAME = "com.mrchandler.disableprox_preferences";
     public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
     public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
     public static final String PREFS_KEY_BLOCKLIST = "enabled_blocking_list";
+    public static final String PREFS_KEY_NEVER_SHOW_XPOSED_INSTALLED = "never_show_xposed_installed";
 
     public static final int SENSOR_STATUS_DO_NOTHING = 0;
     public static final int SENSOR_STATUS_REMOVE_SENSOR = 1;
