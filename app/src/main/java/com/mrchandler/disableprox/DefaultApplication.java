@@ -24,7 +24,7 @@ public class DefaultApplication extends Application {
             String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(proximitySensor);
             prefs.edit()
                     .putInt(sensorKey, Constants.SENSOR_STATUS_MOCK_VALUES)
-                    .putString(mockValuesKey, "0:")
+                    .putString(mockValuesKey, proximitySensor.getMaximumRange() + ":")
                     .remove("prefs_key_prox_sensor")
                     .apply();
         }
