@@ -70,12 +70,15 @@ public class SettingsPreferenceFragment extends PreferenceFragment {
 
         //Donations
         final PreferenceCategory donationCategory = (PreferenceCategory) findPreference("donation_category");
-        donationCategory.setEnabled(false);
         final IabHelper helper = ((SettingsPreferenceActivity) getActivity()).getIabHelper();
         helper.startSetup(new IabHelper.OnIabSetupFinishedListener() {
             @Override
             public void onIabSetupFinished(IabResult result) {
                 donationCategory.setEnabled(result.isSuccess());
+                proPurchase.setEnabled(result.isSuccess());
+                if (result.isFailure()) {
+                    Toast.makeText(getActivity(), "Can't connect to Google Play Services. Paying options disabled.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

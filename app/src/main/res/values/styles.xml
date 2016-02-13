@@ -20,7 +20,7 @@
 
     <style name="Theme.ActionBar" parent="@android:style/Widget.DeviceDefault.ActionBar">
         <item name="android:titleTextStyle">@android:style/TextAppearance.Medium</item>
-        <item name="android:background">?android:colorPrimary</item>
+
     </style>
 
 </resources>
