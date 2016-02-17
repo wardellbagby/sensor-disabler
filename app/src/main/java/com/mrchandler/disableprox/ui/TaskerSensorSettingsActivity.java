@@ -62,6 +62,10 @@ public final class TaskerSensorSettingsActivity extends SensorSettingsActivity {
                 String sensorTitle = SensorUtil.getHumanStringType(sensor);
                 if (sensorTitle == null) {
                     sensorTitle = sensor.getName();
+                    //Probably won't really return null but who knows...
+                    if (sensorTitle == null) {
+                        sensorTitle = "Unknown Sensor";
+                    }
                 }
                 setTitle(sensorTitle);
                 currentFragment = fragment;

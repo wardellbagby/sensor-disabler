@@ -2,6 +2,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory android:title="Pro Settings">
         <Preference
+            android:enabled="false"
             android:key="tasker_purchase"
             android:title="Purchase Pro Version" />
         <CheckBoxPreference
