@@ -102,8 +102,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         HashMap<Integer, Sensor> map =
                             (HashMap<Integer, Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
 
-                        Log.d("long1eu", map.toString());
-
                         sensors = new SparseArray<>(map.size());
                         for (Integer i : map.keySet()) {
                             sensors.append(i, map.get(i));
