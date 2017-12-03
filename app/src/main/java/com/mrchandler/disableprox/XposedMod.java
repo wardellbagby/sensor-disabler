@@ -6,6 +6,7 @@ import android.hardware.SensorEventListener;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.mrchandler.disableprox.util.BlocklistType;
@@ -14,6 +15,7 @@ import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -91,9 +93,19 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     //Marshmallow converted our field into a module level one, so we have different code based on that. Otherwise, the same.
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                         sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
-                    } else {
+                    } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
                         Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
                         sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                    } else {
+                        //From N there is a HashMap. Checked until O(27).
+                        Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
+                        HashMap<Integer, Sensor> map =
+                            (HashMap<Integer, Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+
+                        sensors = new SparseArray<>(map.size());
+                        for (Integer i : map.keySet()) {
+                            sensors.append(i, map.get(i));
+                        }
                     }
 
                     // params.args[] is an array that holds the arguments that dispatchSensorEvent received, which are a handle pointing to a sensor
