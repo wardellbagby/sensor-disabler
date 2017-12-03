@@ -1,17 +1,17 @@
-Proximity Sensor Disabler
+Sensor Disabler
 ========================
 
-This disables the proximity sensor in 4.1 - 6.0 devices. It has not been tested on anything less than 4.1, and does currently work on 6.0.
+This Xposed module allows you to modify and disable various sensors on your device. It supports Tasker and a Whitelist/Blacklist.
 
 Installation
 ------------
  1. Download and install [Xposed framework](http://repo.xposed.info/module/de.robv.android.xposed.installer)
- 2. Search for and install [Disable Proximity Sensor](https://play.google.com/store/apps/details?id=com.mrchandler.disableprox) module
+ 2. Search for and install [Sensor Disabler](https://play.google.com/store/apps/details?id=com.mrchandler.disableprox) module. Alternatively: Download the APK from one of the Release tags or build it from source.
  3. Activate the module and reboot
 
 Usage
 -----
-This app does not have a launcher activity. You can access the settings via Xposed -> Modules -> Disable Proximity Sensor. When the toggle is off, the sensor is disabled. When the toggle is on, the sensor is enabled.
+*Coming soon.*
 
 Links
 -----
