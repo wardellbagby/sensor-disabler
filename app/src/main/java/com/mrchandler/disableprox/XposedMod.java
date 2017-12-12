@@ -14,6 +14,7 @@ import com.mrchandler.disableprox.util.SensorUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -93,7 +94,18 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
                     } else {
                         Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
-                        sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
+                            sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                        } else {
+                            //From N there is a HashMap. Checked until O(27).
+                            HashMap<Integer, Sensor> map =
+                                    (HashMap<Integer, Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+
+                            sensors = new SparseArray<>(map.size());
+                            for (Integer i : map.keySet()) {
+                                sensors.append(i, map.get(i));
+                            }
+                        }
                     }
 
                     // params.args[] is an array that holds the arguments that dispatchSensorEvent received, which are a handle pointing to a sensor
@@ -221,8 +233,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     private boolean isAppBlacklisted(String packageName, Sensor sensor) {
         sharedPreferences.reload();
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
-                        packageName,
-                        BlocklistType.BLACKLIST),
+                packageName,
+                BlocklistType.BLACKLIST),
                 false);
     }
 
@@ -230,8 +242,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         sharedPreferences.reload();
 
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
-                        packageName,
-                        BlocklistType.WHITELIST),
+                packageName,
+                BlocklistType.WHITELIST),
                 false);
     }
 
