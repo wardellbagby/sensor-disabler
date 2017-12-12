@@ -1,11 +1,8 @@
 package com.mrchandler.disableprox;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.SparseArray;
 
 import com.mrchandler.disableprox.util.BlocklistType;
@@ -27,6 +24,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 import static de.robv.android.xposed.XposedHelpers.findClass;
 
+//todo Refactor this class into separate components.
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit {
     private static XSharedPreferences sharedPreferences;
 
@@ -44,7 +42,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
     public void handleLoadPackage(final LoadPackageParam lpparam)
             throws Throwable {
         disableSystemSensorManager(lpparam);
-        //disableSensorEventListeners(lpparam);
         removeSensors(lpparam);
     }
 
@@ -70,7 +67,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                             Sensor sensor = (Sensor) param.args[0];
 
                             //Use processName here always. Not packageName.
-                            if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                            if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                                 // Get the mock values from the settings.
                                 float[] values = getSensorValues(sensor);
 
@@ -113,7 +110,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                     Sensor sensor = sensors.get(handle);
 
-                    if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                    if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                         float[] values = getSensorValues(sensor);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
                         and some sensors (looking at you, Proximity) only use one index in the array
@@ -127,40 +124,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
             };
             XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager$SensorEventQueue", lpparam.classLoader, "dispatchSensorEvent", int.class, float[].class, int.class, long.class, mockSensorHook);
         }
-    }
-
-    /**
-     * Method 2: Disable by changing the values that Listeners receive via delegating to the original listener.
-     * [Probably the worst way to go about it.]
-     **/
-    void disableSensorEventListeners(LoadPackageParam lpparam) {
-
-        XC_MethodHook method2RegisterHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                Sensor sensor = (Sensor) param.args[1];
-                if (getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
-                    final SensorEventListener oldListener = (SensorEventListener) param.args[0];
-                    if (oldListener instanceof InjectedSensorEventListener) {
-                        return;
-                    }
-                    InjectedSensorEventListener injectedListener = new InjectedSensorEventListener(oldListener);
-                    param.args[0] = injectedListener;
-                }
-            }
-        };
-
-        XC_MethodHook method2UnregisterHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                //TODO The problem with this method is it ruins the unregister. It could be possible
-                //if there was an easier way to know if the listener received here had been shadowed
-                //by an InjectedSensorEventListener. I leave it in as a possibility, but this is not
-                //used.
-            }
-        };
-        XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager", lpparam.classLoader, "registerListenerImpl", SensorEventListener.class, Sensor.class, int.class, Handler.class, int.class, int.class, method2RegisterHook);
-        XposedHelpers.findAndHookMethod("android.hardware.SystemSensorManager", lpparam.classLoader, "unregisterListenerImpl", SensorEventListener.class, Sensor.class, method2UnregisterHook);
     }
 
     /**
@@ -178,7 +141,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     Iterator<Sensor> iterator = fullSensorList.iterator();
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
-                        if (!shouldAppHalt(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
+                        if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
                             iterator.remove();
                         }
                     }
@@ -247,7 +210,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                 false);
     }
 
-    private boolean shouldAppHalt(String packageName, Sensor sensor) {
+    private boolean isPackageAllowedForSensor(String packageName, Sensor sensor) {
         if (isWhitelistEnabled()) {
             if (!isAppWhitelisted(packageName, sensor)) {
                 return true;
@@ -260,29 +223,5 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
             }
         }
         return false;
-    }
-
-
-    /**
-     * Used for delegating a false Sensor value to registered sensor listeners.
-     **/
-    private class InjectedSensorEventListener implements SensorEventListener {
-
-        SensorEventListener oldListener;
-
-        public InjectedSensorEventListener(SensorEventListener oldListener) {
-            this.oldListener = oldListener;
-        }
-
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            event.values[0] = event.sensor.getMaximumRange();
-            oldListener.onSensorChanged(event);
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            oldListener.onAccuracyChanged(sensor, accuracy);
-        }
     }
 }
