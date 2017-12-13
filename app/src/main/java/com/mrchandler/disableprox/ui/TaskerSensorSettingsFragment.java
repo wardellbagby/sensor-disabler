@@ -34,13 +34,13 @@ public class TaskerSensorSettingsFragment extends SensorSettingsFragment {
     }
 
     @Override
-    public void loadDefaultValues() {
+    public void loadValues() {
         Bundle settings = getArguments();
         if (settings != null && settings.containsKey(ENABLED_STATUS) && settings.containsKey(MOCK_VALUES)) {
             setSensorStatus(settings.getInt(ENABLED_STATUS));
             setValues(settings.getFloatArray(MOCK_VALUES));
         } else {
-            super.loadDefaultValues();
+            super.loadValues();
         }
     }
 

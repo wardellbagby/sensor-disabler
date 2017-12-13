@@ -1,6 +1,7 @@
 package com.mrchandler.disableprox;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -15,7 +16,8 @@ public class DefaultApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
+
+        SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
         if (prefs.getBoolean("prefs_key_prox_sensor", false)) {
             //Updating from an older version. Let's make sure the app will still work as intended.
             SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

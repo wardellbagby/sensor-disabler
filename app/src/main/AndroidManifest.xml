@@ -26,6 +26,11 @@
             android:name="xposeddescription"
             android:value="Allows you to disable and modify sensors available on your device." />
 
+        <provider
+            android:name=".SensorDisablerPreferenceProvider"
+            android:authorities="com.mrchandler.disableprox"
+            android:exported="true"/>
+
         <activity
             android:name=".ui.TaskerSensorSettingsActivity"
             android:exported="true"

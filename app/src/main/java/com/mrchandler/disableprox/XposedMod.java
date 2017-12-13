@@ -1,10 +1,13 @@
 package com.mrchandler.disableprox;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.os.Build;
 import android.os.Environment;
 import android.util.SparseArray;
 
+import com.crossbowffs.remotepreferences.RemotePreferences;
 import com.mrchandler.disableprox.util.BlocklistType;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.SensorUtil;
@@ -18,7 +21,6 @@ import java.util.List;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
@@ -26,7 +28,6 @@ import static de.robv.android.xposed.XposedHelpers.findClass;
 
 //todo Refactor this class into separate components.
 public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit {
-    private static XSharedPreferences sharedPreferences;
 
     /**
      * Shout out to abusalimov for his Light Sensor fix that inspired this app.
@@ -34,25 +35,20 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
 
     @Override
     public void initZygote(StartupParam startupParam) throws Throwable {
-        sharedPreferences = new XSharedPreferences(Constants.PACKAGE_NAME);
-        sharedPreferences.makeWorldReadable();
+
     }
 
     @Override
     public void handleLoadPackage(final LoadPackageParam lpparam)
             throws Throwable {
-        disableSystemSensorManager(lpparam);
+        mockSensorValues(lpparam);
         removeSensors(lpparam);
     }
 
     /**
      * Disable by changing the data that the SensorManager gives listeners.
      **/
-    private void disableSystemSensorManager(final LoadPackageParam lpparam) {
-        // Alright, so we start by creating a reference to the class that handles sensors.
-        final Class<?> systemSensorManager = findClass(
-                "android.hardware.SystemSensorManager", lpparam.classLoader);
-
+    private void mockSensorValues(final LoadPackageParam lpparam) {
         // Here, we grab the method that actually dispatches sensor events to tweak what it receives. Since the API seems to have changed in
         // Jelly Bean MR2, we use two different method hooks depending on the API.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -65,11 +61,11 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                         @Override
                         protected void beforeHookedMethod(MethodHookParam param) {
                             Sensor sensor = (Sensor) param.args[0];
-
+                            Context context = (Context) XposedHelpers.getObjectField(XposedHelpers.getSurroundingThis(param.thisObject), "mContext");
                             //Use processName here always. Not packageName.
-                            if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                            if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                                 // Get the mock values from the settings.
-                                float[] values = getSensorValues(sensor);
+                                float[] values = getSensorValues(sensor, context);
 
                                 //noinspection SuspiciousSystemArraycopy
                                 System.arraycopy(values, 0, param.args[1], 0, values.length);
@@ -84,19 +80,19 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                 protected void beforeHookedMethod(MethodHookParam param)
                         throws Throwable {
 
+                    Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
                     // This pulls the 'Handle to Sensor' array straight from the SystemSensorManager class, so it should always pull the appropriate sensor.
                     SparseArray<Sensor> sensors;
                     //Marshmallow converted our field into a module level one, so we have different code based on that. Otherwise, the same.
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                        sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManager, "sHandleToSensor");
+                        final Class<?> systemSensorManagerClass = findClass("android.hardware.SystemSensorManager", lpparam.classLoader);
+                        sensors = (SparseArray<Sensor>) XposedHelpers.getStaticObjectField(systemSensorManagerClass, "sHandleToSensor");
                     } else {
-                        Object systemSensorManager = XposedHelpers.getObjectField(param.thisObject, "mManager");
                         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M) {
                             sensors = (SparseArray<Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
                         } else {
                             //From N there is a HashMap. Checked until O(27).
-                            HashMap<Integer, Sensor> map =
-                                    (HashMap<Integer, Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
+                            HashMap<Integer, Sensor> map = (HashMap<Integer, Sensor>) XposedHelpers.getObjectField(systemSensorManager, "mHandleToSensor");
 
                             sensors = new SparseArray<>(map.size());
                             for (Integer i : map.keySet()) {
@@ -109,9 +105,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                     // in sHandleToSensor and a float[] of values that should be applied to that sensor.
                     int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                     Sensor sensor = sensors.get(handle);
-
-                    if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_MOCK_VALUES) {
-                        float[] values = getSensorValues(sensor);
+                    Context context = (Context) XposedHelpers.getObjectField(systemSensorManager, "mContext");
+                    if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_MOCK_VALUES) {
+                        float[] values = getSensorValues(sensor, context);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
                         and some sensors (looking at you, Proximity) only use one index in the array
                         but still send along a length 3 array, so we copy here instead of replacing it
@@ -135,13 +131,14 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 //Without this, you'd never be able to edit the values for a removed sensor! Aaah!
-                if (!lpparam.packageName.equals(Constants.PACKAGE_NAME)) {
+                if (!lpparam.packageName.equals(BuildConfig.APPLICATION_ID)) {
                     //Create a new list so we don't modify the original list.
                     @SuppressWarnings("unchecked") List<Sensor> fullSensorList = new ArrayList<>((Collection<? extends Sensor>) param.getResult());
                     Iterator<Sensor> iterator = fullSensorList.iterator();
+                    Context context = (Context) XposedHelpers.getObjectField(param.thisObject, "mContext");
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
-                        if (!isPackageAllowedForSensor(lpparam.processName, sensor) && getSensorStatus(sensor) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
+                        if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
                             iterator.remove();
                         }
                     }
@@ -151,26 +148,19 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         });
     }
 
-    private int getSensorStatus(Sensor sensor) {
+    private int getSensorStatus(Sensor sensor, Context context) {
         //Always assume that the user wants the app to do nothing, since this accesses every sensor.
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
         String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
-        if (sharedPreferences == null) {
-            //Not sure if Xposed Modules suffer from the same "static variables becoming null" problem as the rest of Android, but just in case.
-            sharedPreferences = new XSharedPreferences(Constants.PREFS_FILE_NAME);
-        }
-        sharedPreferences.reload();
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
         return sharedPreferences.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
     }
 
-    private float[] getSensorValues(Sensor sensor) {
+    private float[] getSensorValues(Sensor sensor, Context context) {
         XposedHelpers.setStaticBooleanField(Environment.class, "sUserRequired", false);
         String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
         String[] mockValuesStrings;
-        if (sharedPreferences == null) {
-            sharedPreferences = new XSharedPreferences(Constants.PREFS_FILE_NAME);
-        }
-        sharedPreferences.reload();
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
         if (sharedPreferences.contains(mockValuesKey)) {
             mockValuesStrings = sharedPreferences.getString(mockValuesKey, "").split(":", 0);
         } else {
@@ -184,25 +174,30 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
         return mockValuesFloats;
     }
 
-    private boolean isWhitelistEnabled() {
-        sharedPreferences.reload();
-        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, BlocklistType.BLACKLIST.getValue()).equalsIgnoreCase(BlocklistType.WHITELIST.getValue());
+    private SharedPreferences getSharedPreferences(Context context) {
+        return new RemotePreferences(context, BuildConfig.APPLICATION_ID, Constants.PREFS_FILE_NAME);
     }
 
-    private boolean isBlacklistEnabled() {
-        return !isWhitelistEnabled();
+    private boolean isWhitelistEnabled(Context context) {
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
+        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, BlocklistType.NONE.getValue()).equalsIgnoreCase(BlocklistType.WHITELIST.getValue());
     }
 
-    private boolean isAppBlacklisted(String packageName, Sensor sensor) {
-        sharedPreferences.reload();
+    private boolean isBlacklistEnabled(Context context) {
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
+        return sharedPreferences.getString(Constants.PREFS_KEY_BLOCKLIST, BlocklistType.NONE.getValue()).equalsIgnoreCase(BlocklistType.BLACKLIST.getValue());
+    }
+
+    private boolean isAppBlacklisted(String packageName, Sensor sensor, Context context) {
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
                 packageName,
                 BlocklistType.BLACKLIST),
                 false);
     }
 
-    private boolean isAppWhitelisted(String packageName, Sensor sensor) {
-        sharedPreferences.reload();
+    private boolean isAppWhitelisted(String packageName, Sensor sensor, Context context) {
+        SharedPreferences sharedPreferences = getSharedPreferences(context);
 
         return sharedPreferences.getBoolean(SensorUtil.generateUniqueSensorPackageBasedKey(sensor,
                 packageName,
@@ -210,15 +205,15 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit 
                 false);
     }
 
-    private boolean isPackageAllowedForSensor(String packageName, Sensor sensor) {
-        if (isWhitelistEnabled()) {
-            if (!isAppWhitelisted(packageName, sensor)) {
+    private boolean isPackageAllowedToSeeTrueSensor(String packageName, Sensor sensor, Context context) {
+        if (isWhitelistEnabled(context)) {
+            if (isAppWhitelisted(packageName, sensor, context)) {
                 return true;
             }
         } else {
-            if (isBlacklistEnabled()) {
-                if (isAppBlacklisted(packageName, sensor)) {
-                    return true;
+            if (isBlacklistEnabled(context)) {
+                if (isAppBlacklisted(packageName, sensor, context)) {
+                    return false;
                 }
             }
         }

@@ -64,15 +64,15 @@ public final class FireReceiver extends BroadcastReceiver {
             int sensorStatusValue = bundle.getInt(PluginBundleManager.BUNDLE_EXTRA_SENSOR_STATUS_VALUE);
             String sensorValueKey = bundle.getString(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_KEY);
             float[] sensorMockValues = bundle.getFloatArray(PluginBundleManager.BUNDLE_EXTRA_SENSOR_MOCK_VALUES_VALUES);
-            String sensorMockValuesString = "";
+            StringBuilder sensorMockValuesString = new StringBuilder();
             if (sensorMockValues != null) {
                 for (float value : sensorMockValues) {
-                    sensorMockValuesString += value + ":";
+                    sensorMockValuesString.append(value).append(":");
                 }
             }
             SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
             prefs.edit().putInt(sensorStatusKey, sensorStatusValue)
-                    .putString(sensorValueKey, sensorMockValuesString)
+                    .putString(sensorValueKey, sensorMockValuesString.toString())
                     .apply();
 
         }

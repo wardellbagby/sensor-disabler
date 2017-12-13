@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme">
+    <style name="AppTheme" parent="AppBaseTheme">
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorAccent">@color/primary_accent</item>
         <item name="android:colorPrimaryDark">@color/primary_dark</item>

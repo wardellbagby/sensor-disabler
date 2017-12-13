@@ -23,8 +23,6 @@ public final class Constants {
     public static final String LOG_TAG = "Disable Prox Sensor"; //$NON-NLS-1$
     public static final boolean IS_LOGGABLE = BuildConfig.DEBUG;
 
-    public static final String PACKAGE_NAME = "com.mrchandler.disableprox";
-
     public static final String SKU_TASKER = "tasker_purchase";
     public static final String SKU_DONATION_1 = "donation_1";
     public static final String SKU_DONATION_5 = "donation_5";

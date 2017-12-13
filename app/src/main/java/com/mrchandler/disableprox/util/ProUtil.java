@@ -2,6 +2,7 @@ package com.mrchandler.disableprox.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 /**
  * @author Wardell
