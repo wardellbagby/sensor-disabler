@@ -96,7 +96,7 @@ public class BlocklistFragment extends Fragment {
                     break;
             }
         }
-        prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+        prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
         SensorManager sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
         checkableSensors = new ArrayList<>();
         for (Sensor s : sensorManager.getSensorList(Sensor.TYPE_ALL)) {
@@ -148,7 +148,7 @@ public class BlocklistFragment extends Fragment {
     }
 
     private boolean getStatus(Sensor sensor) {
-        SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+        SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
         String key = SensorUtil.generateUniqueSensorPackageBasedKey(sensor, packageName, type);
         return prefs.getBoolean(key, false);
     }

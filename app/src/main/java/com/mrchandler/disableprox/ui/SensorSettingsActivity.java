@@ -137,7 +137,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
             }
         }
 
-        prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
+        prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_PRIVATE);
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Pro IAP?

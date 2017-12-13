@@ -70,7 +70,7 @@ public final class FireReceiver extends BroadcastReceiver {
                     sensorMockValuesString.append(value).append(":");
                 }
             }
-            SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+            SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
             prefs.edit().putInt(sensorStatusKey, sensorStatusValue)
                     .putString(sensorValueKey, sensorMockValuesString.toString())
                     .apply();

@@ -186,7 +186,7 @@ public class SensorSettingsFragment extends Fragment {
                     mockValuesPrefsValue.append(value).append(":");
                 }
             }
-            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit().putInt(enabledStatusKey, enabledStatusValue);
             if (mockValuesPrefsValue.length() > 0)
                 editor.putString(mockedValuesPrefsKey, mockValuesPrefsValue.toString());
@@ -198,7 +198,7 @@ public class SensorSettingsFragment extends Fragment {
 
     protected void loadValues() {
         if (getContext() != null) {
-            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
             String mockedValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
             String[] mockValuesStringArray;
