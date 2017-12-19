@@ -2,6 +2,7 @@ package com.mrchandler.disableprox.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 
 /**
  * @author Wardell
@@ -47,6 +48,6 @@ public final class ProUtil {
     }
 
     private static SharedPreferences getSharedPreferences(Context context) {
-        return context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+        return context.getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
     }
 }

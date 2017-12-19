@@ -138,7 +138,7 @@ public class SensorSettingsFragment extends Fragment {
             valueSettings.add(seekBar);
             linearLayout.addView(layout);
         }
-        loadDefaultValues();
+        loadValues();
         return rootView;
     }
 
@@ -155,7 +155,7 @@ public class SensorSettingsFragment extends Fragment {
                 showInfoDialog();
                 break;
             case R.id.reset:
-                loadDefaultValues();
+                loadValues();
                 break;
             default:
                 super.onOptionsItemSelected(item);
@@ -178,35 +178,41 @@ public class SensorSettingsFragment extends Fragment {
         if (getContext() != null) {
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
             int enabledStatusValue = getSensorStatus();
-            String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
-            String mockValuesValues = "";
-            for (float value : getValues()) {
-                mockValuesValues += value + ":";
+            String mockedValuesPrefsKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
+            StringBuilder mockValuesPrefsValue = new StringBuilder();
+            float[] currentValues = getValues();
+            if (currentValues.length > 0) {
+                for (float value : getValues()) {
+                    mockValuesPrefsValue.append(value).append(":");
+                }
             }
-            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
-            prefs.edit()
-                    .putInt(enabledStatusKey, enabledStatusValue)
-                    .putString(mockValuesKey, mockValuesValues)
-                    .apply();
-            Toast.makeText(getContext(), "Settings saved for sensor " + sensor.getName() + ".", Toast.LENGTH_SHORT).show();
+            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit().putInt(enabledStatusKey, enabledStatusValue);
+            if (mockValuesPrefsValue.length() > 0)
+                editor.putString(mockedValuesPrefsKey, mockValuesPrefsValue.toString());
+            editor.apply();
+
+            Toast.makeText(getContext(), "Settings saved for sensor \"" + sensor.getName() + "\".", Toast.LENGTH_SHORT).show();
         }
     }
 
-    protected void loadDefaultValues() {
+    protected void loadValues() {
         if (getContext() != null) {
-            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+            SharedPreferences prefs = getContext().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
             String enabledStatusKey = SensorUtil.generateUniqueSensorKey(sensor);
-            String mockValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
+            String mockedValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(sensor);
             String[] mockValuesStringArray;
             int enabledStatus = prefs.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING);
 
-            if (prefs.contains(mockValuesKey)) {
-                mockValuesStringArray = prefs.getString(mockValuesKey, "").split(":", 0);
-            } else {
-                mockValuesStringArray = new String[valueSettings.size()];
-                for (int i = 0; i < valueSettings.size(); i++) {
-                    mockValuesStringArray[i] = "" + valueSettings.get(i).getMin() / 10.0f;
+            if (prefs.contains(mockedValuesKey)) {
+                String prefsMockedValues = prefs.getString(mockedValuesKey, "");
+                if (prefsMockedValues.isEmpty()) {
+                    mockValuesStringArray = getDefaultMockedValues();
+                } else {
+                    mockValuesStringArray = prefsMockedValues.split(":", 0);
                 }
+            } else {
+                mockValuesStringArray = getDefaultMockedValues();
             }
 
             //TODO This could be better.
@@ -228,6 +234,14 @@ public class SensorSettingsFragment extends Fragment {
             }
             setValues(mockValues);
         }
+    }
+
+    private String[] getDefaultMockedValues() {
+        String[] defaultValues = new String[valueSettings.size()];
+        for (int i = 0; i < valueSettings.size(); i++) {
+            defaultValues[i] = "" + (valueSettings.get(i).getMin() / 10.0f);
+        }
+        return defaultValues;
     }
 
     public float[] getValues() {

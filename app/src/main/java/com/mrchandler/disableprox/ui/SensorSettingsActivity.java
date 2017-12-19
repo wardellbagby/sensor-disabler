@@ -38,6 +38,7 @@ import android.widget.CheckBox;
 
 import com.melnykov.fab.FloatingActionButton;
 import com.melnykov.fab.ObservableScrollView;
+import com.mrchandler.disableprox.BuildConfig;
 import com.mrchandler.disableprox.R;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.IabHelper;
@@ -136,9 +137,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
             }
         }
 
-        //Has to be done to access with XSharedPreferences.
-        prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
-
+        prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_PRIVATE);
 
         helper = new IabHelper(this, getString(R.string.google_billing_public_key));
         //Has the user purchased the Pro IAP?
@@ -190,7 +189,7 @@ public class SensorSettingsActivity extends FragmentActivity implements SensorLi
                     .setNegativeButton("Uninstall", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Uri packageUri = Uri.parse("package:" + Constants.PACKAGE_NAME);
+                            Uri packageUri = Uri.parse("package:" + BuildConfig.APPLICATION_ID);
                             startActivity(new Intent(Intent.ACTION_UNINSTALL_PACKAGE, packageUri));
                             finish();
                         }

@@ -33,5 +33,5 @@ proguard/
 # Created by .ignore support plugin (hsz.mobi)
 
 app/build/
-.idea/*
-*.iml
+*/*.iml
+/.idea/

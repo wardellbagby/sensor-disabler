@@ -27,7 +27,7 @@ public class SettingsPreferenceFragment extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_WORLD_READABLE);
+        final SharedPreferences prefs = getActivity().getSharedPreferences(Constants.PREFS_FILE_NAME, Context.MODE_PRIVATE);
         getPreferenceManager().setSharedPreferencesName(Constants.PREFS_FILE_NAME);
         addPreferencesFromResource(R.xml.pro_settings_preferences);
         addPreferencesFromResource(R.xml.blocklist_settings);

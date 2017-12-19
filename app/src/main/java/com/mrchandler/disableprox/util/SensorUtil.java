@@ -4,13 +4,19 @@ import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.mrchandler.disableprox.R;
+
+import java.util.regex.Pattern;
 
 /**
  * @author Wardell
  */
 public final class SensorUtil {
+
+    private static final String SENSOR_SEPARATOR = "|*^&SensorDisabler&^*|";
+
     private SensorUtil() {
     }
 
@@ -94,11 +100,11 @@ public final class SensorUtil {
     public static String generateUniqueSensorKey(Sensor sensor) {
         //TODO Maybe use Sensor.toString?
         return sensor.getName()
-                + "|"
+                + SENSOR_SEPARATOR
                 + sensor.getVendor()
-                + "|"
+                + SENSOR_SEPARATOR
                 + sensor.getVersion()
-                + "|"
+                + SENSOR_SEPARATOR
                 + sensor.getType();
     }
 
@@ -112,7 +118,7 @@ public final class SensorUtil {
     }
 
     public static Sensor getSensorFromUniqueSensorKey(Context context, String key) {
-        String[] data = key.split("\\|"); //Regex, man. Regex.
+        String[] data = key.split(Pattern.quote(SENSOR_SEPARATOR)); //Regex, man. Regex.
         if (data.length >= 4) {
             try {
                 String name = data[0];
@@ -130,6 +136,8 @@ public final class SensorUtil {
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Unable to get unique sensor from key.");
             }
+        } else {
+            Log.e("SensorUtil", "Unable to parse \"" + key + "\" as Sensor data.");
         }
         return null;
     }

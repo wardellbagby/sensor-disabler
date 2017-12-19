@@ -19,7 +19,7 @@ public class BlocklistActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.blocklist_activity_layout);
         Bundle extras = getIntent().getExtras();
-        SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_WORLD_READABLE);
+        SharedPreferences prefs = getSharedPreferences(Constants.PREFS_FILE_NAME, MODE_PRIVATE);
         String blocklistStatus = prefs.getString(Constants.PREFS_KEY_BLOCKLIST, Constants.BLACKLIST);
         boolean whitelist = blocklistStatus.equalsIgnoreCase(Constants.WHITELIST);
         BlocklistType type = (whitelist) ? BlocklistType.WHITELIST : BlocklistType.BLACKLIST;
