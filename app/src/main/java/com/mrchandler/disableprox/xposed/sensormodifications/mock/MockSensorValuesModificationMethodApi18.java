@@ -1,5 +1,6 @@
 package com.mrchandler.disableprox.xposed.sensormodifications.mock;
 
+import android.app.AndroidAppHelper;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.util.SparseArray;
@@ -34,7 +35,7 @@ public class MockSensorValuesModificationMethodApi18 extends MockSensorValuesMod
                 // in sHandleToSensor and a float[] of values that should be applied to that sensor.
                 int handle = (Integer) (param.args[0]); // This tells us which sensor was currently called.
                 Sensor sensor = sensors.get(handle);
-                Context context = (Context) XposedHelpers.getObjectField(systemSensorManager, "mContext");
+                Context context = AndroidAppHelper.currentApplication();
                 if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                     float[] values = getSensorValues(sensor, context);
                         /*The SystemSensorManager compares the array it gets with the array from the a SensorEvent,
