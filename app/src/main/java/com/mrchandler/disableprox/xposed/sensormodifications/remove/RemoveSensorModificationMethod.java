@@ -1,5 +1,6 @@
 package com.mrchandler.disableprox.xposed.sensormodifications.remove;
 
+import android.app.AndroidAppHelper;
 import android.content.Context;
 import android.hardware.Sensor;
 
@@ -34,7 +35,7 @@ public class RemoveSensorModificationMethod extends SensorModificationMethod {
                     //Create a new list so we don't modify the original list.
                     @SuppressWarnings("unchecked") List<Sensor> fullSensorList = new ArrayList<>((Collection<? extends Sensor>) param.getResult());
                     Iterator<Sensor> iterator = fullSensorList.iterator();
-                    Context context = (Context) XposedHelpers.getObjectField(param.thisObject, "mContext");
+                    Context context = AndroidAppHelper.currentApplication();
                     while (iterator.hasNext()) {
                         Sensor sensor = iterator.next();
                         if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_REMOVE_SENSOR) {
