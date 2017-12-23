@@ -1,5 +1,6 @@
 package com.mrchandler.disableprox.xposed.sensormodifications.mock;
 
+import android.app.AndroidAppHelper;
 import android.content.Context;
 import android.hardware.Sensor;
 
@@ -28,7 +29,7 @@ public class MockSensorValuesModificationMethod extends SensorModificationMethod
                     @Override
                     protected void beforeHookedMethod(MethodHookParam param) {
                         Sensor sensor = (Sensor) param.args[0];
-                        Context context = (Context) XposedHelpers.getObjectField(XposedHelpers.getSurroundingThis(param.thisObject), "mContext");
+                        Context context = AndroidAppHelper.currentApplication();
                         //Use processName here always. Not packageName.
                         if (!isPackageAllowedToSeeTrueSensor(lpparam.processName, sensor, context) && getSensorStatus(sensor, context) == Constants.SENSOR_STATUS_MOCK_VALUES) {
                             // Get the mock values from the settings.
