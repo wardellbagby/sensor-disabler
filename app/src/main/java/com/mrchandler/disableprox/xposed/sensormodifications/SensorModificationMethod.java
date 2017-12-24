@@ -5,11 +5,10 @@ import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.os.Environment;
 
-import com.crossbowffs.remotepreferences.RemotePreferences;
-import com.mrchandler.disableprox.BuildConfig;
 import com.mrchandler.disableprox.util.BlocklistType;
 import com.mrchandler.disableprox.util.Constants;
 import com.mrchandler.disableprox.util.SensorUtil;
+import com.mrchandler.disableprox.util.remotepreferences.SensorDisablerPreferenceFactory;
 
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -53,7 +52,7 @@ public abstract class SensorModificationMethod {
     }
 
     private SharedPreferences getSharedPreferences(Context context) {
-        return new RemotePreferences(context, BuildConfig.APPLICATION_ID, Constants.PREFS_FILE_NAME);
+        return SensorDisablerPreferenceFactory.getInstance(context);
     }
 
     private boolean isWhitelistEnabled(Context context) {
