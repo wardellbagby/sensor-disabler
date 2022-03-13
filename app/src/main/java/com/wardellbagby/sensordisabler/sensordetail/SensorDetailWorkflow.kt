@@ -6,11 +6,11 @@ import android.os.Parcelable
 import com.squareup.workflow1.Snapshot
 import com.squareup.workflow1.StatefulWorkflow
 import com.squareup.workflow1.action
-import com.squareup.workflow1.ui.modal.AlertContainerScreen
-import com.squareup.workflow1.ui.modal.AlertScreen
 import com.squareup.workflow1.ui.toParcelable
 import com.squareup.workflow1.ui.toSnapshot
 import com.wardellbagby.sensordisabler.R
+import com.wardellbagby.sensordisabler.modals.DualLayer
+import com.wardellbagby.sensordisabler.modals.ModalScreen
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.*
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.BackPressed
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.Saved
@@ -21,6 +21,7 @@ import com.wardellbagby.sensordisabler.toolbar.ToolbarAction
 import com.wardellbagby.sensordisabler.toolbar.ToolbarProps
 import com.wardellbagby.sensordisabler.util.ModificationType
 import com.wardellbagby.sensordisabler.util.SensorUtil
+import com.wardellbagby.sensordisabler.util.displayName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
@@ -28,7 +29,7 @@ import javax.inject.Inject
 class SensorDetailWorkflow
 @Inject constructor(
   @ApplicationContext private val androidContext: Context
-) : StatefulWorkflow<Props, State, Output, AlertContainerScreen<Rendering>>() {
+) : StatefulWorkflow<Props, State, Output, DualLayer<Rendering>>() {
   data class ModifiableSensor(
     val sensor: Sensor,
     val modificationType: ModificationType,
@@ -86,7 +87,7 @@ class SensorDetailWorkflow
     renderProps: Props,
     renderState: State,
     context: RenderContext
-  ): AlertContainerScreen<Rendering> {
+  ): DualLayer<Rendering> {
     val baseRendering = Rendering(
       toolbarProps = renderProps.sensor.toolbarProps(context),
       modificationType = renderState.modificationType,
@@ -101,24 +102,23 @@ class SensorDetailWorkflow
     )
 
     return when (renderState) {
-      is ShowingInfo -> AlertContainerScreen(
-        baseRendering,
+      is ShowingInfo -> DualLayer(
+        base = baseRendering,
         // TODO Extract message into string resource
-        AlertScreen(
-          title = androidContext.getString(R.string.sensor_information),
-          message = """
-           |Name: ${renderProps.sensor.name}
-           |Type: ${SensorUtil.getHumanStringType(renderProps.sensor)}
-           |Vendor: ${renderProps.sensor.vendor}
-           |Range: ${renderProps.sensor.maximumRange}
-           | 
-           |${SensorUtil.getDescription(renderProps.sensor)}
-          """.trimMargin(),
-          onEvent = context.eventHandler { _ ->
-            state = EditingSensor(state.modificationType)
-          })
+        modal = ModalScreen(
+          InfoRendering(
+            name = renderProps.sensor.displayName,
+            type = SensorUtil.getHumanStringType(renderProps.sensor) ?: "Unknown",
+            vendor = renderProps.sensor.vendor,
+            range = renderProps.sensor.maximumRange.toString(),
+            description = SensorUtil.getDescription(renderProps.sensor),
+            onClose = context.eventHandler {
+              state = EditingSensor(state.modificationType)
+            }
+          )
+        )
       )
-      is EditingSensor -> AlertContainerScreen(baseRendering)
+      is EditingSensor -> DualLayer(baseRendering)
     }
   }
 

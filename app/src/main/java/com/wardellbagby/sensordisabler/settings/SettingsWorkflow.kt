@@ -2,14 +2,12 @@ package com.wardellbagby.sensordisabler.settings
 
 import android.content.Context
 import android.hardware.Sensor
-import com.squareup.workflow1.Snapshot
-import com.squareup.workflow1.StatefulWorkflow
-import com.squareup.workflow1.action
-import com.squareup.workflow1.renderChild
+import com.squareup.workflow1.*
+import com.squareup.workflow1.WorkflowAction.Companion.noAction
 import com.wardellbagby.sensordisabler.R
-import com.wardellbagby.sensordisabler.Toaster
-import com.wardellbagby.sensordisabler.billing.PerformPurchaseWorkflow
-import com.wardellbagby.sensordisabler.billing.QuerySkuWorkflow
+import com.wardellbagby.sensordisabler.billing.BillingClientHelper
+import com.wardellbagby.sensordisabler.billing.BillingClientHelper.Event.Error
+import com.wardellbagby.sensordisabler.billing.BillingClientHelper.Event.PurchasesUpdated
 import com.wardellbagby.sensordisabler.modals.DualLayer
 import com.wardellbagby.sensordisabler.modals.ModalScreen
 import com.wardellbagby.sensordisabler.settings.Output.Closed
@@ -52,10 +50,6 @@ sealed class State {
   data class ChangingFilterSettings(
     override val proStatus: ProStatus
   ) : State()
-
-  data class ShowingPurchaseFailure(
-    override val proStatus: ProStatus
-  ) : State()
 }
 
 sealed class Output {
@@ -90,11 +84,9 @@ sealed class SettingsRow {
 
 class SettingsWorkflow
 @Inject constructor(
-  private val querySkuWorkflow: QuerySkuWorkflow,
-  private val performPurchaseWorkflow: PerformPurchaseWorkflow,
   private val filterTypeWorkflow: FilterTypeWorkflow,
   private val filterSettingsWorkflow: FilterSettingsWorkflow,
-  private val toaster: Toaster,
+  private val billingClientHelper: BillingClientHelper,
   @ApplicationContext private val androidContext: Context
 ) : StatefulWorkflow<Props, State, Output, DualLayer<*>>() {
   data class Props(val sensors: List<Sensor>)
@@ -109,6 +101,19 @@ class SettingsWorkflow
     renderState: State,
     context: RenderContext
   ): DualLayer<*> {
+    context.runningWorker(billingClientHelper.asWorker()) {
+      when (it) {
+        is Error -> action {
+          state = EditingSettings(state.proStatus)
+        }
+        is PurchasesUpdated -> action {
+          if (state is EditingSettings || state is AttemptingPurchase) {
+            state = LoadingInAppPurchases
+          }
+        }
+        else -> noAction()
+      }
+    }
     val toolbar = context.renderChild(
       ToolbarWorkflow,
       props = ToolbarProps(
@@ -119,26 +124,13 @@ class SettingsWorkflow
         }),
     )
     return when (renderState) {
-      is ShowingPurchaseFailure -> {
-        DualLayer(
-          base = settingsScreen(toolbar, renderState),
-          modal = ModalScreen(
-            FailedToPurchaseDialog(
-              onClose = context.eventHandler {
-                state = EditingSettings(state.proStatus)
-              })
-          )
-        )
-      }
       is LoadingInAppPurchases -> {
-        context.renderChild(
-          querySkuWorkflow,
-          props = QuerySkuWorkflow.Props(Constants.SKU_TASKER)
-        ) {
+        context.runningWorker(billingClientHelper.getInAppPurchases()) {
           action {
-            ProUtil.setProStatus(androidContext, it.hasSku)
+            val isPro = it.contains(Constants.SKU_TASKER)
+            ProUtil.setProStatus(androidContext, isPro)
             state = EditingSettings(
-              proStatus = if (it.hasSku) PURCHASED else NOT_PURCHASED,
+              proStatus = if (isPro) PURCHASED else NOT_PURCHASED,
             )
           }
         }
@@ -146,37 +138,15 @@ class SettingsWorkflow
           base = SettingsScreen(toolbar = toolbar,
             sections = listOf(),
             onBack = { context.actionSink.send(action { setOutput(Closed) }) }
-          )
+          ),
+          modal = ModalScreen(LoadingScreen)
         )
       }
       is AttemptingPurchase -> {
-        context.renderChild(
-          performPurchaseWorkflow,
-          props = PerformPurchaseWorkflow.Props(
-            sku = renderState.sku,
-            shouldConsume = renderState.shouldConsume
-          )
-        ) { output ->
-          action {
-            val proStatus = if ((state as AttemptingPurchase).sku == Constants.SKU_TASKER) {
-              if (output.success) {
-                ProUtil.setProStatus(androidContext, true)
-                PURCHASED
-              } else {
-                state.proStatus
-              }
-            } else {
-              state.proStatus
-            }
-
-            state = if (output.success) {
-              toaster.showToast(androidContext.getString(R.string.purchase_successful))
-              EditingSettings(proStatus)
-            } else {
-              ShowingPurchaseFailure(proStatus)
-            }
-          }
+        context.runningSideEffect(renderState.sku) {
+          billingClientHelper.attemptPurchase(renderState.sku)
         }
+
         DualLayer(
           base = settingsScreen(
             toolbar = toolbar,
@@ -255,12 +225,15 @@ class SettingsWorkflow
           header = androidContext.getString(R.string.pro_settings_header),
           rows = listOfNotNull(
             ButtonRow(
-              title = if (renderState.proStatus == PURCHASED) {
-                androidContext.getString(R.string.thank_you_for_buying)
-              } else {
-                androidContext.getString(R.string.purchase_pro_version)
+              title = when {
+                renderState.proStatus == PURCHASED -> androidContext.getString(R.string.thank_you_for_buying)
+                !billingClientHelper.isAvailable -> androidContext.getString(R.string.cannot_purchase_pro)
+                else -> androidContext.getString(R.string.purchase_pro_version)
               },
-              onClick = if (renderState.proStatus == PURCHASED) {
+              subtitle = if (!billingClientHelper.isAvailable) {
+                androidContext.getString(R.string.no_google_play)
+              } else "",
+              onClick = if (renderState.proStatus == PURCHASED || !billingClientHelper.isAvailable) {
                 {} // No-op if we've already purchased pro
               } else {
                 onPurchasePro
@@ -307,7 +280,7 @@ class SettingsWorkflow
                 onDonation(Constants.SKU_DONATION_10)
               }),
           )
-        )
+        ).takeIf { billingClientHelper.isAvailable }
       ),
       onBack = onBack
     )

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
   <string name="app_name">Sensor Disabler</string>
 
@@ -40,11 +40,17 @@
   <string name="donate_10">Donate a nice meal!</string>
   <string name="settings_saved">Settings saved</string>
   <string name="sensor_information">Sensor Information</string>
-  <string name="purchase_failed">Failed to purchase</string>
-  <string name="try_again_later">Please try again later</string>
+  <string name="try_again_later">An error occurred communicating with Google Play. Making purchases may not work.</string>
   <string name="close">Close</string>
+  <string name="purchase_pending">Purchase is pending.</string>
   <string name="purchase_successful">Purchase successful! Thank you!</string>
   <string name="thank_you_for_buying">Thank you for buying the pro version!</string>
+  <string name="sensor_info_name_label">Name:</string>
+  <string name="sensor_info_type_label">Type:</string>
+  <string name="sensor_info_vendor_label">Vendor:</string>
+  <string name="sensor_info_range_label">Range:</string>
+  <string name="cannot_purchase_pro">Cannot purchase Pro version</string>
+  <string name="no_google_play">Google Play is not available</string>
   <string-array name="accelerometer_values">
     <item>Acceleration X (m/s²):</item>
     <item>Acceleration Y (m/s²):</item>

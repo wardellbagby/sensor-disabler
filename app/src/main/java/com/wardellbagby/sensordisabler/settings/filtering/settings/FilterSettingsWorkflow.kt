@@ -26,7 +26,7 @@ import javax.inject.Inject
 class FilterSettingsWorkflow
 @Inject constructor(
   @ApplicationContext private val androidContext: Context
-) : StatefulWorkflow<Props, State, Output, Any>() {
+) : StatefulWorkflow<Props, State, Output, OptionalToolbarScreen>() {
   @Parcelize
   data class ApplicationData(
     val packageName: String,
@@ -66,7 +66,11 @@ class FilterSettingsWorkflow
     return snapshot?.toParcelable() ?: LoadingPackages
   }
 
-  override fun render(renderProps: Props, renderState: State, context: RenderContext): Any {
+  override fun render(
+    renderProps: Props,
+    renderState: State,
+    context: RenderContext
+  ): OptionalToolbarScreen {
     return when (renderState) {
       LoadingPackages -> {
         context.runningWorker(Worker.from {

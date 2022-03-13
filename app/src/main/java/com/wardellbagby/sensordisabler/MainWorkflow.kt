@@ -3,10 +3,8 @@ package com.wardellbagby.sensordisabler
 import android.content.Context
 import android.hardware.Sensor
 import android.os.Parcelable
-import com.squareup.workflow1.Snapshot
-import com.squareup.workflow1.StatefulWorkflow
-import com.squareup.workflow1.action
-import com.squareup.workflow1.renderChild
+import com.squareup.workflow1.*
+import com.squareup.workflow1.WorkflowAction.Companion.noAction
 import com.squareup.workflow1.ui.ViewRegistry
 import com.squareup.workflow1.ui.modal.AlertContainer
 import com.squareup.workflow1.ui.toParcelable
@@ -14,6 +12,10 @@ import com.squareup.workflow1.ui.toSnapshot
 import com.wardellbagby.sensordisabler.MainWorkflow.Props
 import com.wardellbagby.sensordisabler.MainWorkflow.State
 import com.wardellbagby.sensordisabler.MainWorkflow.State.*
+import com.wardellbagby.sensordisabler.billing.BillingClientHelper
+import com.wardellbagby.sensordisabler.billing.BillingClientHelper.Event.*
+import com.wardellbagby.sensordisabler.billing.BillingModalWorkflow
+import com.wardellbagby.sensordisabler.modals.DualLayer
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailLayoutRunner
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.BackPressed
@@ -28,6 +30,7 @@ import com.wardellbagby.sensordisabler.toolbar.ToolbarAction
 import com.wardellbagby.sensordisabler.toolbar.ToolbarLayoutRunner
 import com.wardellbagby.sensordisabler.toolbar.ToolbarProps
 import com.wardellbagby.sensordisabler.toolbar.ToolbarWorkflow
+import com.wardellbagby.sensordisabler.util.Constants
 import com.wardellbagby.sensordisabler.util.getMockedValues
 import com.wardellbagby.sensordisabler.util.getModificationType
 import com.wardellbagby.sensordisabler.util.saveSettings
@@ -54,21 +57,54 @@ class MainWorkflow
   private val sensorListWorkflow: SensorListWorkflow,
   private val sensorDetailWorkflow: SensorDetailWorkflow,
   private val settingsWorkflow: SettingsWorkflow,
+  private val billingModalWorkflow: BillingModalWorkflow,
+  private val billingClientHelper: BillingClientHelper,
   private val toaster: Toaster
-) : StatefulWorkflow<Props, State, Nothing, Any>() {
+) : StatefulWorkflow<Props, State, Nothing, DualLayer<*>>() {
+  private companion object {
+    private val CONSUMABLE_SKUS = listOf(
+      Constants.SKU_DONATION_1,
+      Constants.SKU_DONATION_5,
+      Constants.SKU_DONATION_10
+    )
+  }
 
   data class Props(val sensors: List<Sensor>)
+
+  @Parcelize
+  data class UnacknowledgedPurchase(val sku: String, val purchaseToken: String) : Parcelable
+
   sealed class State : Parcelable {
     abstract val sensorIndex: Int
+    abstract val unacknowledgedPurchases: List<UnacknowledgedPurchase>
 
     @Parcelize
-    data class SensorList(override val sensorIndex: Int) : State()
+    data class SensorList(
+      override val sensorIndex: Int,
+      override val unacknowledgedPurchases: List<UnacknowledgedPurchase> = listOf()
+    ) : State()
 
     @Parcelize
-    data class SensorDetails(override val sensorIndex: Int) : State()
+    data class SensorDetails(
+      override val sensorIndex: Int,
+      override val unacknowledgedPurchases: List<UnacknowledgedPurchase> = listOf()
+    ) : State()
 
     @Parcelize
-    data class AppSettings(override val sensorIndex: Int) : State()
+    data class AppSettings(
+      override val sensorIndex: Int,
+      override val unacknowledgedPurchases: List<UnacknowledgedPurchase> = listOf()
+    ) : State()
+
+    fun withUnacknowledgedPurchases(
+      unacknowledgedPurchases: List<UnacknowledgedPurchase>
+    ): State {
+      return when (this) {
+        is AppSettings -> copy(unacknowledgedPurchases = unacknowledgedPurchases)
+        is SensorDetails -> copy(unacknowledgedPurchases = unacknowledgedPurchases)
+        is SensorList -> copy(unacknowledgedPurchases = unacknowledgedPurchases)
+      }
+    }
   }
 
   override fun initialState(
@@ -80,10 +116,50 @@ class MainWorkflow
     renderProps: Props,
     renderState: State,
     context: RenderContext
-  ): Any {
-    val sink = context.actionSink
+  ): DualLayer<*> {
+    context.runningSideEffect("pending_purchase") {
+      billingClientHelper.loadPendingPurchases()
+    }
+    context.runningWorker(worker = billingClientHelper.asWorker()) { event ->
+      when (event) {
+        Connected, Disconnected, Error -> noAction()
+        is PurchasesUpdated -> action {
+          when {
+            event.completed.isNotEmpty() -> {
+              val unacknowledgedPurchases = event.completed
+                .filter { !it.isAcknowledged }
+                .map {
+                  UnacknowledgedPurchase(
+                    sku = it.skus.first(),
+                    purchaseToken = it.purchaseToken
+                  )
+                }
+              if (unacknowledgedPurchases.isNotEmpty()) {
+                toaster.showToast(androidContext.resources.getString(R.string.purchase_successful))
+              }
+              state = state.withUnacknowledgedPurchases(
+                unacknowledgedPurchases = unacknowledgedPurchases
+              )
+            }
+            event.pending.isNotEmpty() -> {
+              toaster.showToast(androidContext.resources.getString(R.string.purchase_pending))
+            }
+          }
+        }
+      }
+    }
 
-    return when (renderState) {
+    context.runningSideEffect(renderState.unacknowledgedPurchases.joinToString()) {
+      for (purchase in renderState.unacknowledgedPurchases) {
+        billingClientHelper.acknowledgePurchase(
+          purchaseToken = purchase.purchaseToken,
+          CONSUMABLE_SKUS.contains(purchase.sku)
+        )
+      }
+    }
+
+    val billingModalRendering = context.renderChild(billingModalWorkflow)
+    val childRendering = when (renderState) {
       is SensorList, is SensorDetails -> {
         val drawerRendering =
           context.renderChild(
@@ -130,17 +206,13 @@ class MainWorkflow
               ToolbarWorkflow,
               props = contentRendering.beneathModals.toolbarProps.addSettings(context)
             ),
-            content = contentRendering
+            content = contentRendering.beneathModals
           ),
           isDrawerOpened = renderState is SensorList,
-          onDrawerClosed = {
-            if (renderState !is SensorList) return@DrawerLayoutRendering
-            sink.send(
-              action {
-                state = SensorDetails(state.sensorIndex)
-              })
+          onDrawerClosed = context.eventHandler {
+            state = SensorDetails(state.sensorIndex)
           }
-        )
+        ).let { DualLayer(it) }
       }
       is AppSettings -> context.renderChild(
         settingsWorkflow,
@@ -151,6 +223,11 @@ class MainWorkflow
           }
         })
     }
+
+    return DualLayer(
+      base = childRendering.beneathModals,
+      modal = billingModalRendering ?: childRendering.modals.firstOrNull()
+    )
   }
 
   override fun snapshotState(state: State): Snapshot {

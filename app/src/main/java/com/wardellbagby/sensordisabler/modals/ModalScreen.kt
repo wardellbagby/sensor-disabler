@@ -23,8 +23,8 @@ data class DualLayer<B : Any>(
 ) : HasModals<B, ModalScreen> {
   constructor(
     base: B,
-    modal: ModalScreen
-  ) : this(base, listOf(modal))
+    modal: ModalScreen?
+  ) : this(base, listOfNotNull(modal))
 
   constructor(
     base: B,

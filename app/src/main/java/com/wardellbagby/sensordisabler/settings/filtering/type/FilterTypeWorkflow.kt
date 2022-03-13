@@ -6,13 +6,13 @@ import com.wardellbagby.sensordisabler.util.FilterType
 import javax.inject.Inject
 
 class FilterTypeWorkflow
-@Inject constructor() : StatefulWorkflow<FilterType, FilterType, FilterType, Any>() {
+@Inject constructor() : StatefulWorkflow<FilterType, FilterType, FilterType, FilterTypeScreen>() {
 
   override fun render(
     renderProps: FilterType,
     renderState: FilterType,
     context: RenderContext
-  ): Any {
+  ): FilterTypeScreen {
     return FilterTypeScreen(
       filterType = renderState,
       onChange = context.eventHandler { filterType ->
