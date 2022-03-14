@@ -35,3 +35,5 @@ proguard/
 app/build/
 */*.iml
 /.idea/
+
+captures/

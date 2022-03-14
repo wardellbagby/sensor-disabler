@@ -1,139 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
-    <string name="app_name">Sensor Disabler</string>
-    <!-- A format string for breadcrumbs in the titlebar.  For left to right languages, such as English, the format will look something like "Main Activity > Sub Activity > Sub Activity 2".  Item #1 is the previous path, item #2 is the separator, and item #3 is the current item.  For most left to right languages, this shouldn't need to be changed. -->
-    <string name="twofortyfouram_locale_breadcrumb_format" tools:ignore="UnusedResources">%1$s%2$s%3$s</string>
+  <string name="app_name">Sensor Disabler</string>
 
-    <!-- The separator character for breadcrumbs.  For most left to right languages, this shouldn't need to be changed. -->
-    <string name="twofortyfouram_locale_breadcrumb_separator" tools:ignore="UnusedResources">\u0020&gt;\u0020</string>
-
-    <!-- The Don't Save button in the menu or Action Bar.  MDPI 21 character maximum -->
-    <string name="twofortyfouram_locale_menu_dontsave">Cancel</string>
-
-    <!-- The Help button in the menu or Action Bar.  MDPI 21 character maximum -->
-    <string name="twofortyfouram_locale_menu_help">Help</string>
-
-    <!-- The Save button in the menu or Action Bar.  MDPI 21 character maximum -->
-    <string name="twofortyfouram_locale_menu_save">Done</string>
-
-    <!--I know I'm putting this here in plain text, but it is my public key so it doesn't matter much if it's noticed since this app is open source. Everyone is welcome to edit the source and build the app themselves to get around any pay walls I put up.-->
-    <string name="google_billing_public_key">
+  <!--I know I'm putting this here in plain text, but it is my public key so it doesn't matter much if it's noticed since this app is open source. Everyone is welcome to edit the source and build the app themselves to get around any pay walls I put up.-->
+  <string name="google_billing_public_key">
         MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyW/6IHLReFssRT1ttE6sTzkAznDP5FO+1xT2uPQCcJsmotVf5pHnrrf+8gtJQXf0VfK09UtXfTfADZ+SpfvE7fbEp8I9uh4+XP3XwQYdgPQ3waxtIRduloog9pAkip8HtDNGIOd5DsNn1G5UkUvyukm4n8GS/kEVMID19GQCzQJdGCUZCCQiuvJrqOcF5qg5UXbUbF4I4MzGKS/2RWavbZ02fjZXxs82c51IaEQ8krseEXQrrLYITvuGGz3/3zRxuEL4jVviwYiew1q7nM8uMM13LWkXxIvqkq1oGBj/HhFbwIdH7rhO4bkcg6sM1AzAyXrrnzvPIRAg//+tAVdG+QIDAQAB
     </string>
-
-    <string name="iap_dialog_title">Unauthorized Action</string>
-
-    <string name="iap_dialog_message">This action is currently only available by purchases the Pro upgrade. Would you like
-        to purchase it now?
-    </string>
-
-    <string name="iap_dialog_more_information">If you would like to use this feature without paying for it, open up Sensor Disabler, go to Settings, and check the Freeload option. Please consider paying in the future to support development!
-    </string>
-    <string name="menu_reset">Reset</string>
-    <string name="menu_info">Info</string>
-    <string name="menu_save">Save</string>
-    <string name="do_nothing_radio_button">Do nothing</string>
-    <string name="remove_sensor_radio_button">Remove sensor</string>
-    <string name="mock_sensor_radio_button">Mock sensor values</string>
-    <string name="menu_freeload">Freeload</string>
-    <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
-    <string name="menu_settings">Settings</string>
-    <string name="app_icon_content_desc">Application Icon</string>
-    <string name="blacklist_check_all">Check All</string>
-    <string name="blacklist_title">Blacklist</string>
-    <string name="whitelist_title">Whitelist</string>
-    <string-array name="accelerometer_values">
-        <item>Acceleration X (m/s²):</item>
-        <item>Acceleration Y (m/s²):</item>
-        <item>Acceleration Z (m/s²):</item>
-    </string-array>
-    <string-array name="magnetic_values">
-        <item>Magnetic Field X (uT):</item>
-        <item>Magnetic Field Y (uT):</item>
-        <item>Magnetic Field Z (uT):</item>
-    </string-array>
-    <string-array name="gyroscore_values">
-        <item>Angular Speed X (radians/second):</item>
-        <item>Angular Speed Y (radians/second):</item>
-        <item>Angular Speed Z (radians/second):</item>
-    </string-array>
-    <string-array name="light_values">
-        <item>Light Level (lux):</item>
-    </string-array>
-    <string-array name="pressure_values">
-        <item>Pressure (hPa):</item>
-    </string-array>
-    <string-array name="proximity_values">
-        <item>Distance (cm):</item>
-    </string-array>
-    <string-array name="gravity_values">
-        <item>X (m/s²):</item>
-        <item>Y (m/s²):</item>
-        <item>Z (m/s²):</item>
-    </string-array>
-    <string-array name="linear_acceleration_values">
-        <item>X (m/s²):</item>
-        <item>Y (m/s²):</item>
-        <item>Z (m/s²):</item>
-    </string-array>
-    <string-array name="rotation_vector_values">
-        <item>x*sin(θ/2):</item>
-        <item>y*sin(θ/2):</item>
-        <item>z*sin(θ/2):</item>
-        <item>cos(θ)</item>
-        <item>Heading Accuracy (radians):</item>
-    </string-array>
-    <string-array name="orientation_values">
-        <item>Azimuth (°):</item>
-        <item>Pitch (°):</item>
-        <item>Roll (°):</item>
-    </string-array>
-    <string-array name="relative_humidity_values">
-        <item>Relative Humidity (%):</item>
-    </string-array>
-    <string-array name="ambient_temperature_values">
-        <item>Ambient Temperature (°C):</item>
-    </string-array>
-    <string-array name="magnetic_field_uncalibrated_values">
-        <item>x_uncalib (ut)</item>
-        <item>y_uncalib (ut)</item>
-        <item>z_uncalib (ut)</item>
-        <item>x_bias (ut)</item>
-        <item>y_bias (ut)</item>
-        <item>z_bias (ut)</item>
-    </string-array>
-    <string-array name="game_rotation_vector_values">
-        <item>x*sin(θ/2):</item>
-        <item>y*sin(θ/2):</item>
-        <item>z*sin(θ/2):</item>
-        <item>cos(θ)</item>
-        <item>Heading Accuracy (radians):</item>
-    </string-array>
-    <string-array name="gyroscore_uncalibrated_values">
-        <item>Angular Speed X (radians/second):</item>
-        <item>Angular Speed Y (radians/second):</item>
-        <item>Angular Speed Z (radians/second):</item>
-        <item>Estimated Drift X (radians/second):</item>
-        <item>Estimated Drift Y (radians/second):</item>
-        <item>Estimated Drift Z (radians/second):</item>
-    </string-array>
-    <string-array name="heart_rate_values">
-        <item>Heart Rate (beats/minutes):</item>
-    </string-array>
-    <string-array name="step_counter_values">
-        <item>Steps (steps since last reboot):</item>
-    </string-array>
-    <string-array name="app_spinner">
-        <item>All Apps</item>
-        <item>Blacklisted Apps</item>
-        <item>Whitelisted Apps</item>
-    </string-array>
-    <string name="title_activity_settings">Settings</string>
-    <string name="action_settings">Settings</string>
-    <string name="empty">Empty</string>
-    <string name="xposed_not_installed">You may not have Xposed installed. Without Xposed installed on your device, this app will not work correctly. If you are certain that you have Xposed installed, please ignore this message. If you do not have Xposed installed, or are unsure what Xposed is, please uninstall this application as it will not work for you.</string>
-    <string name="never_show_again">Never Show Again</string>
+  <string name="do_nothing_radio_button">Do nothing</string>
+  <string name="remove_sensor_radio_button">Remove sensor</string>
+  <string name="mock_sensor_radio_button">Mock sensor values</string>
+  <string name="menu_info">Info</string>
+  <string name="menu_reset">Reset</string>
+  <string name="menu_save">Save</string>
+  <string name="menu_settings">Settings</string>
+  <string name="dangerous_sensor_warning">Editing this sensor could have unwanted side-effects. Use extreme caution.</string>
+  <string name="app_icon_content_desc">Application Icon</string>
+  <string name="title_activity_settings">Settings</string>
+  <string name="action_settings">Settings</string>
+  <string name="empty">Empty</string>
+  <string name="xposed_not_installed">You may not have Xposed installed. Without Xposed installed on your device, this app will not work correctly. If you are certain that you have Xposed installed, please ignore this message. If you do not have Xposed installed, or are unsure what Xposed is, please uninstall this application as it will not work for you.</string>
+  <string name="never_show_again">Never Show Again</string>
+  <string name="none">None</string>
+  <string name="select_filter_type">Select Filter Type</string>
+  <string name="allow">Allow</string>
+  <string name="deny">Deny</string>
+  <string name="filter_settings_title">Choose App to Filter</string>
+  <string name="pro_settings_header">Pro Settings</string>
+  <string name="purchase_pro_version">Purchase Pro Version</string>
+  <string name="freeload">Freeload</string>
+  <string name="freeload_description">Allows using Pro features without paying.</string>
+  <string name="filter_settings_header">Filter Settings</string>
+  <string name="filter_type">Filter Type</string>
+  <string name="filter_type_description">Set the filter type to be used.</string>
+  <string name="filter_settings">Filter Settings</string>
+  <string name="donations_header">Donations</string>
+  <string name="donate_1">Donate a bag of chips!</string>
+  <string name="donate_5">Donate a slice of pizza!</string>
+  <string name="donate_10">Donate a nice meal!</string>
+  <string name="settings_saved">Settings saved</string>
+  <string name="sensor_information">Sensor Information</string>
+  <string name="try_again_later">An error occurred communicating with Google Play. Making purchases may not work.</string>
+  <string name="close">Close</string>
+  <string name="purchase_pending">Purchase is pending.</string>
+  <string name="purchase_successful">Purchase successful! Thank you!</string>
+  <string name="thank_you_for_buying">Thank you for buying the pro version!</string>
+  <string name="sensor_info_name_label">Name:</string>
+  <string name="sensor_info_type_label">Type:</string>
+  <string name="sensor_info_vendor_label">Vendor:</string>
+  <string name="sensor_info_range_label">Range:</string>
+  <string name="cannot_purchase_pro">Cannot purchase Pro version</string>
+  <string name="no_google_play">Google Play is not available</string>
+  <string name="unknown">Unknown</string>
+  <string-array name="accelerometer_values">
+    <item>Acceleration X (m/s²):</item>
+    <item>Acceleration Y (m/s²):</item>
+    <item>Acceleration Z (m/s²):</item>
+  </string-array>
+  <string-array name="magnetic_values">
+    <item>Magnetic Field X (uT):</item>
+    <item>Magnetic Field Y (uT):</item>
+    <item>Magnetic Field Z (uT):</item>
+  </string-array>
+  <string-array name="gyroscore_values">
+    <item>Angular Speed X (radians/second):</item>
+    <item>Angular Speed Y (radians/second):</item>
+    <item>Angular Speed Z (radians/second):</item>
+  </string-array>
+  <string-array name="light_values">
+    <item>Light Level (lux):</item>
+  </string-array>
+  <string-array name="pressure_values">
+    <item>Pressure (hPa):</item>
+  </string-array>
+  <string-array name="proximity_values">
+    <item>Distance (cm):</item>
+  </string-array>
+  <string-array name="gravity_values">
+    <item>X (m/s²):</item>
+    <item>Y (m/s²):</item>
+    <item>Z (m/s²):</item>
+  </string-array>
+  <string-array name="linear_acceleration_values">
+    <item>X (m/s²):</item>
+    <item>Y (m/s²):</item>
+    <item>Z (m/s²):</item>
+  </string-array>
+  <string-array name="rotation_vector_values">
+    <item>x*sin(θ/2):</item>
+    <item>y*sin(θ/2):</item>
+    <item>z*sin(θ/2):</item>
+    <item>cos(θ)</item>
+    <item>Heading Accuracy (radians):</item>
+  </string-array>
+  <string-array name="orientation_values">
+    <item>Azimuth (°):</item>
+    <item>Pitch (°):</item>
+    <item>Roll (°):</item>
+  </string-array>
+  <string-array name="relative_humidity_values">
+    <item>Relative Humidity (%):</item>
+  </string-array>
+  <string-array name="ambient_temperature_values">
+    <item>Ambient Temperature (°C):</item>
+  </string-array>
+  <string-array name="magnetic_field_uncalibrated_values">
+    <item>x_uncalib (ut)</item>
+    <item>y_uncalib (ut)</item>
+    <item>z_uncalib (ut)</item>
+    <item>x_bias (ut)</item>
+    <item>y_bias (ut)</item>
+    <item>z_bias (ut)</item>
+  </string-array>
+  <string-array name="game_rotation_vector_values">
+    <item>x*sin(θ/2):</item>
+    <item>y*sin(θ/2):</item>
+    <item>z*sin(θ/2):</item>
+    <item>cos(θ)</item>
+    <item>Heading Accuracy (radians):</item>
+  </string-array>
+  <string-array name="gyroscore_uncalibrated_values">
+    <item>Angular Speed X (radians/second):</item>
+    <item>Angular Speed Y (radians/second):</item>
+    <item>Angular Speed Z (radians/second):</item>
+    <item>Estimated Drift X (radians/second):</item>
+    <item>Estimated Drift Y (radians/second):</item>
+    <item>Estimated Drift Z (radians/second):</item>
+  </string-array>
+  <string-array name="heart_rate_values">
+    <item>Heart Rate (beats/minutes):</item>
+  </string-array>
+  <string-array name="step_counter_values">
+    <item>Steps (steps since last reboot):</item>
+  </string-array>
+  <string-array name="app_spinner">
+    <item>All Apps</item>
+    <item>Blacklisted Apps</item>
+    <item>Whitelisted Apps</item>
+  </string-array>
 
 
 </resources>

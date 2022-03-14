@@ -3,29 +3,28 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="8dp"
     android:paddingLeft="32dp"
     android:paddingRight="16dp"
-    android:paddingTop="8dp">
+    >
 
 
-    <org.adw.library.widgets.discreteseekbar.DiscreteSeekBar
-        android:id="@+id/value"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true" />
+  <TextView
+      android:id="@+id/label"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentTop="true"
+      android:layout_centerVertical="true"
+      android:gravity="center_vertical"
+      android:maxLines="4"
+      android:textAppearance="@style/TextAppearance.AppCompat.Small"
+      />
 
-    <TextView
-        android:id="@+id/label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_centerVertical="true"
-        android:layout_toLeftOf="@+id/value"
-        android:gravity="center_vertical"
-        android:maxLines="4"
-        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium" />
+  <com.google.android.material.slider.Slider
+      android:id="@+id/value"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/label"
+      android:layout_centerVertical="true"
+      />
 </RelativeLayout>

@@ -1,7 +1,7 @@
 Sensor Disabler
 ========================
 
-This Xposed module allows you to modify and disable various sensors on your device. It supports Tasker and a Whitelist/Blacklist.
+This Xposed module allows you to modify and disable various sensors on your device. It supports Tasker and filtering which apps will be able to bypass Sensor Disabler.
 
 Installation
 ------------
