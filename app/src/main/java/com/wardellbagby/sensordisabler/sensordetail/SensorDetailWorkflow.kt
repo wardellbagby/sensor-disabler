@@ -30,12 +30,6 @@ class SensorDetailWorkflow
 @Inject constructor(
   @ApplicationContext private val androidContext: Context
 ) : StatefulWorkflow<Props, State, Output, DualLayer<Rendering>>() {
-  data class ModifiableSensor(
-    val sensor: Sensor,
-    val modificationType: ModificationType,
-    val defaultMockableValues: List<MockableValue>
-  )
-
   data class Props(
     val sensor: Sensor,
     val modificationType: ModificationType,

@@ -161,23 +161,22 @@ class MainWorkflow
     val billingModalRendering = context.renderChild(billingModalWorkflow)
     val childRendering = when (renderState) {
       is SensorList, is SensorDetails -> {
-        val drawerRendering =
-          context.renderChild(
-            sensorListWorkflow,
-            props = ListProps(renderProps.sensors),
-            handler = {
-              when (it) {
-                is SelectedSensor -> action {
-                  state = SensorDetails(it.sensorIndex)
-                }
-                is SensorListWorkflow.Output.BackPressed -> action {
-                  state = SensorDetails(state.sensorIndex)
-                }
+        val listRendering = context.renderChild(
+          sensorListWorkflow,
+          props = ListProps(renderProps.sensors),
+          handler = {
+            when (it) {
+              is SelectedSensor -> action {
+                state = SensorDetails(it.sensorIndex)
               }
-            })
+              is SensorListWorkflow.Output.BackPressed -> action {
+                state = SensorDetails(state.sensorIndex)
+              }
+            }
+          })
 
         val sensor = renderProps.sensors[renderState.sensorIndex]
-        val contentRendering = context.renderChild(
+        val detailRendering = context.renderChild(
           sensorDetailWorkflow,
           props = DetailProps(
             sensor = sensor,
@@ -200,19 +199,19 @@ class MainWorkflow
         )
 
         DrawerLayoutRendering(
-          drawerRendering = drawerRendering,
+          drawerRendering = listRendering,
           contentRendering = OptionalToolbarScreen(
             toolbar = context.renderChild(
               ToolbarWorkflow,
-              props = contentRendering.beneathModals.toolbarProps.addSettings(context)
+              props = detailRendering.beneathModals.toolbarProps.addSettings(context)
             ),
-            content = contentRendering.beneathModals
+            content = detailRendering.beneathModals
           ),
           isDrawerOpened = renderState is SensorList,
           onDrawerClosed = context.eventHandler {
             state = SensorDetails(state.sensorIndex)
           }
-        ).let { DualLayer(it) }
+        ).let { DualLayer(it, detailRendering.modals) }
       }
       is AppSettings -> context.renderChild(
         settingsWorkflow,
