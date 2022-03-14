@@ -48,7 +48,13 @@ class RenderingModalContainer @JvmOverloads constructor(
     initialModalRendering: ModalScreen,
     initialViewEnvironment: ViewEnvironment
   ): DialogRef<ModalScreen> {
-    val dialog = Dialog(context, dialogThemeResId)
+    val dialog = object : Dialog(context, dialogThemeResId) {
+      override fun onBackPressed() {
+        val owner = context.onBackPressedDispatcherOwnerOrNull()
+        val backPressedDispatcher = owner?.onBackPressedDispatcher
+        backPressedDispatcher?.onBackPressed()
+      }
+    }
     val viewStub = WorkflowViewStub(context)
 
     dialog.setContentView(FrameLayout(context).apply {
@@ -57,6 +63,8 @@ class RenderingModalContainer @JvmOverloads constructor(
       addView(viewStub, LayoutParams(MATCH_PARENT, MATCH_PARENT))
     })
     dialog.setCancelable(false)
+    dialog.setCanceledOnTouchOutside(false)
+
     val ref = DialogRef(initialModalRendering, initialViewEnvironment, dialog, viewStub)
     updateDialog(ref)
     return ref
@@ -64,8 +72,9 @@ class RenderingModalContainer @JvmOverloads constructor(
 
   override fun updateDialog(dialogRef: DialogRef<ModalScreen>) {
     val rendering = dialogRef.modalRendering
+    val stub = dialogRef.extra as WorkflowViewStub
 
-    (dialogRef.extra as WorkflowViewStub).update(rendering.rendering, dialogRef.viewEnvironment)
+    stub.update(rendering.rendering, dialogRef.viewEnvironment)
   }
 
   private class RenderingModalContainerViewFactory(

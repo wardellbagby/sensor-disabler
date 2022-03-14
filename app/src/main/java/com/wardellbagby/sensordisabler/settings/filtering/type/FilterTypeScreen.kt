@@ -5,6 +5,7 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import com.squareup.workflow1.ui.AndroidViewRendering
 import com.squareup.workflow1.ui.LayoutRunner
+import com.squareup.workflow1.ui.backPressedHandler
 import com.wardellbagby.sensordisabler.R
 import com.wardellbagby.sensordisabler.util.FilterType
 
@@ -21,6 +22,8 @@ data class FilterTypeScreen(
       val deny = view.findViewById<RadioButton>(R.id.deny_checkbox)
       val save = view.findViewById<Button>(R.id.save)
       LayoutRunner { rendering, _ ->
+        view.backPressedHandler = rendering.onSave
+
         group.setOnCheckedChangeListener(null)
         when (rendering.filterType) {
           FilterType.None -> none.isChecked = true
