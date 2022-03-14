@@ -211,7 +211,7 @@ class MainWorkflow
           onDrawerClosed = context.eventHandler {
             state = SensorDetails(state.sensorIndex)
           }
-        ).let { DualLayer(it, detailRendering.modals) }
+        ).let { DualLayer(it, modals = detailRendering.modals) }
       }
       is AppSettings -> context.renderChild(
         settingsWorkflow,
@@ -225,7 +225,7 @@ class MainWorkflow
 
     return DualLayer(
       base = childRendering.beneathModals,
-      modal = billingModalRendering ?: childRendering.modals.firstOrNull()
+      modal = billingModalRendering ?: childRendering.modalRendering
     )
   }
 

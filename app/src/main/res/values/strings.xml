@@ -51,6 +51,7 @@
   <string name="sensor_info_range_label">Range:</string>
   <string name="cannot_purchase_pro">Cannot purchase Pro version</string>
   <string name="no_google_play">Google Play is not available</string>
+  <string name="unknown">Unknown</string>
   <string-array name="accelerometer_values">
     <item>Acceleration X (m/s²):</item>
     <item>Acceleration Y (m/s²):</item>

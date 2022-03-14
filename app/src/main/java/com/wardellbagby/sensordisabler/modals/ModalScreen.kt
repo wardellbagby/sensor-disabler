@@ -23,13 +23,16 @@ data class DualLayer<B : Any>(
 ) : HasModals<B, ModalScreen> {
   constructor(
     base: B,
-    modal: ModalScreen?
-  ) : this(base, listOfNotNull(modal))
+    modal: Any?
+  ) : this(base, modal?.let { ModalScreen(it) })
 
   constructor(
     base: B,
-    vararg modals: ModalScreen
-  ) : this(base, modals.toList())
+    vararg modals: ModalScreen?
+  ) : this(beneathModals = base, modals = modals.toList().filterNotNull())
+
+  val modalRendering: Any?
+    get() = modals.firstOrNull()?.rendering
 }
 
 @WorkflowUiExperimentalApi
@@ -78,6 +81,5 @@ class RenderingModalContainer @JvmOverloads constructor(
     }
   )
 
-  companion object :
-    ViewFactory<DualLayer<*>> by RenderingModalContainerViewFactory()
+  companion object : ViewFactory<DualLayer<*>> by RenderingModalContainerViewFactory()
 }

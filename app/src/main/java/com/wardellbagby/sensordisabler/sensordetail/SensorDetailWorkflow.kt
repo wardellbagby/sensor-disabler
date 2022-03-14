@@ -10,7 +10,6 @@ import com.squareup.workflow1.ui.toParcelable
 import com.squareup.workflow1.ui.toSnapshot
 import com.wardellbagby.sensordisabler.R
 import com.wardellbagby.sensordisabler.modals.DualLayer
-import com.wardellbagby.sensordisabler.modals.ModalScreen
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.*
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.BackPressed
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.Saved
@@ -98,18 +97,16 @@ class SensorDetailWorkflow
     return when (renderState) {
       is ShowingInfo -> DualLayer(
         base = baseRendering,
-        // TODO Extract message into string resource
-        modal = ModalScreen(
-          InfoRendering(
-            name = renderProps.sensor.displayName,
-            type = SensorUtil.getHumanStringType(renderProps.sensor) ?: "Unknown",
-            vendor = renderProps.sensor.vendor,
-            range = renderProps.sensor.maximumRange.toString(),
-            description = SensorUtil.getDescription(renderProps.sensor),
-            onClose = context.eventHandler {
-              state = EditingSensor(state.modificationType)
-            }
-          )
+        modal = InfoRendering(
+          name = renderProps.sensor.displayName,
+          type = SensorUtil.getHumanStringType(renderProps.sensor)
+            ?: androidContext.getString(R.string.unknown),
+          vendor = renderProps.sensor.vendor,
+          range = renderProps.sensor.maximumRange.toString(),
+          description = SensorUtil.getDescription(renderProps.sensor),
+          onClose = context.eventHandler {
+            state = EditingSensor(state.modificationType)
+          }
         )
       )
       is EditingSensor -> DualLayer(baseRendering)

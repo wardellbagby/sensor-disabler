@@ -9,7 +9,6 @@ import com.wardellbagby.sensordisabler.billing.BillingClientHelper
 import com.wardellbagby.sensordisabler.billing.BillingClientHelper.Event.Error
 import com.wardellbagby.sensordisabler.billing.BillingClientHelper.Event.PurchasesUpdated
 import com.wardellbagby.sensordisabler.modals.DualLayer
-import com.wardellbagby.sensordisabler.modals.ModalScreen
 import com.wardellbagby.sensordisabler.settings.Output.Closed
 import com.wardellbagby.sensordisabler.settings.ProStatus.*
 import com.wardellbagby.sensordisabler.settings.SettingsRow.ButtonRow
@@ -139,7 +138,7 @@ class SettingsWorkflow
             sections = listOf(),
             onBack = { context.actionSink.send(action { setOutput(Closed) }) }
           ),
-          modal = ModalScreen(LoadingScreen)
+          modal = LoadingScreen
         )
       }
       is AttemptingPurchase -> {
@@ -153,7 +152,7 @@ class SettingsWorkflow
             renderState = renderState,
             onBack = context.eventHandler { setOutput(Closed) }
           ),
-          modal = ModalScreen(LoadingScreen)
+          modal = LoadingScreen
         )
       }
       is ChoosingFilterType ->
@@ -162,17 +161,15 @@ class SettingsWorkflow
             toolbar = toolbar,
             renderState = renderState
           ),
-          modal = ModalScreen(
-            context.renderChild(
-              filterTypeWorkflow,
-              props = androidContext.getFilterType()
-            ) {
-              action {
-                androidContext.setFilterType(it)
-                state = EditingSettings(renderState.proStatus)
-              }
+          modal = context.renderChild(
+            filterTypeWorkflow,
+            props = androidContext.getFilterType()
+          ) {
+            action {
+              androidContext.setFilterType(it)
+              state = EditingSettings(renderState.proStatus)
             }
-          )
+          }
 
         )
       is ChangingFilterSettings -> DualLayer(
