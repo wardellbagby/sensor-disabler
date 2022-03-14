@@ -52,7 +52,7 @@ fun SharedPreferences.getLegacySensorModificationType(key: String): Int? {
   return when (getInt(key, -1)) {
     Constants.SENSOR_STATUS_DO_NOTHING -> Constants.SENSOR_STATUS_DO_NOTHING
     Constants.SENSOR_STATUS_REMOVE_SENSOR -> Constants.SENSOR_STATUS_REMOVE_SENSOR
-    Constants.SENSOR_STATUS_MOCK_VALUES -> Constants.SENSOR_STATUS_DO_NOTHING
+    Constants.SENSOR_STATUS_MOCK_VALUES -> Constants.SENSOR_STATUS_MOCK_VALUES
     else -> null
   }
 }

@@ -2,7 +2,6 @@ package com.wardellbagby.sensordisabler.util.remotepreferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import com.wardellbagby.sensordisabler.BuildConfig;
 import com.wardellbagby.sensordisabler.util.Constants;
 import java.lang.ref.WeakReference;
 
@@ -18,7 +17,8 @@ public class SensorDisablerPreferenceFactory {
       return lastUsedInstance;
     }
     CachedRemotePreferences newInstance =
-        new CachedRemotePreferences(context, BuildConfig.APPLICATION_ID, Constants.PREFS_FILE_NAME);
+        new CachedRemotePreferences(context, "com.wardellbagby.sensordisabler",
+            Constants.PREFS_FILE_NAME);
     instance = new WeakReference<>(newInstance);
     return newInstance;
   }
