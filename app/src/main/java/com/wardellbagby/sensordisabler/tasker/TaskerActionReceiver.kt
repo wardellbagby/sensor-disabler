@@ -14,7 +14,9 @@ package com.wardellbagby.sensordisabler.tasker
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.wardellbagby.sensordisabler.bundle.BundleScrubber
+import com.wardellbagby.sensordisabler.util.ProUtil
 import com.wardellbagby.sensordisabler.util.saveSettings
 
 class TaskerActionReceiver : BroadcastReceiver() {
@@ -24,6 +26,15 @@ class TaskerActionReceiver : BroadcastReceiver() {
     if (taskerFireSettings != intent.action) {
       return
     }
+
+    if (!ProUtil.isPro(context)) {
+      Log.w(
+        "Sensor Disabler: Tasker",
+        "Not firing Tasker change for Sensor Disabler as Pro is not enabled."
+      )
+      return
+    }
+
     BundleScrubber.scrub(intent)
     val bundle = intent.getBundleExtra(extraBundleKey) ?: return
     BundleScrubber.scrub(bundle)

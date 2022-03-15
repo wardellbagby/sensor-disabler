@@ -84,7 +84,7 @@ class XposedUnavailableWorkflow
     renderProps: Unit,
     context: RenderContext
   ): XposedUnavailableScreen? {
-    return if (!XposedAvailable.isXposedAvailable()) {
+    return if (!XposedAvailable.isXposedAvailable() && !BuildConfig.DEBUG) {
       XposedUnavailableScreen(
         onUninstall = context.eventHandler {
           val packageURI: Uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")

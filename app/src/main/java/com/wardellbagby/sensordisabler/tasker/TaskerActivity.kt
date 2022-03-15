@@ -2,7 +2,6 @@ package com.wardellbagby.sensordisabler.tasker
 
 import android.content.Context
 import android.content.Intent
-import android.hardware.Sensor
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,17 +12,15 @@ import androidx.lifecycle.viewModelScope
 import com.squareup.workflow1.ui.ViewEnvironment
 import com.squareup.workflow1.ui.ViewRegistry
 import com.squareup.workflow1.ui.WorkflowLayout
-import com.squareup.workflow1.ui.modal.AlertContainer
 import com.squareup.workflow1.ui.renderWorkflowIn
 import com.wardellbagby.sensordisabler.ActivityProvider
-import com.wardellbagby.sensordisabler.sensordetail.MockableValue
+import com.wardellbagby.sensordisabler.modals.RenderingModalContainer
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailLayoutRunner
 import com.wardellbagby.sensordisabler.sensorlist.SensorListLayoutRunner
 import com.wardellbagby.sensordisabler.tasker.TaskerWorkflow.Output.Cancelled
 import com.wardellbagby.sensordisabler.tasker.TaskerWorkflow.Output.Saved
-import com.wardellbagby.sensordisabler.util.ModificationType
 import com.wardellbagby.sensordisabler.util.ModificationType.*
-import com.wardellbagby.sensordisabler.util.SensorUtil
+import com.wardellbagby.sensordisabler.util.ProUtil
 import com.wardellbagby.sensordisabler.util.displayName
 import com.wardellbagby.sensordisabler.util.sensors
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,7 +34,7 @@ import javax.inject.Inject
 private val viewRegistry = ViewRegistry(
   SensorDetailLayoutRunner,
   SensorListLayoutRunner,
-  AlertContainer,
+  RenderingModalContainer
 )
 
 private fun Saved.toIntent(): Intent {
@@ -113,7 +110,10 @@ class TaskerViewModel
     renderWorkflowIn(
       workflow = workflow,
       scope = viewModelScope,
-      prop = TaskerWorkflow.Props(context.sensors),
+      prop = TaskerWorkflow.Props(
+        sensors = context.sensors,
+        isPro = ProUtil.isPro(context)
+      ),
       savedStateHandle = savedState
     ) {
       _outputs.emit(it)

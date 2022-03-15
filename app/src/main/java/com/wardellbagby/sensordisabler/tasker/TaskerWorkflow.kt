@@ -8,6 +8,7 @@ import com.squareup.workflow1.StatefulWorkflow
 import com.squareup.workflow1.action
 import com.squareup.workflow1.ui.toParcelable
 import com.squareup.workflow1.ui.toSnapshot
+import com.wardellbagby.sensordisabler.modals.DualLayer
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Output.Saved
 import com.wardellbagby.sensordisabler.sensorlist.SensorListWorkflow
@@ -26,8 +27,8 @@ class TaskerWorkflow
   private val sensorListWorkflow: SensorListWorkflow,
   private val sensorDetailWorkflow: SensorDetailWorkflow,
   @ApplicationContext private val androidContext: Context
-) : StatefulWorkflow<Props, State, Output, Any>() {
-  data class Props(val sensors: List<Sensor>)
+) : StatefulWorkflow<Props, State, Output, DualLayer<*>>() {
+  data class Props(val sensors: List<Sensor>, val isPro: Boolean)
   sealed class State : Parcelable {
     abstract val sensorIndex: Int
 
@@ -46,7 +47,18 @@ class TaskerWorkflow
   override fun initialState(props: Props, snapshot: Snapshot?) =
     snapshot?.toParcelable() ?: PickingSensor(sensorIndex = 0)
 
-  override fun render(renderProps: Props, renderState: State, context: RenderContext): Any {
+  override fun render(
+    renderProps: Props,
+    renderState: State,
+    context: RenderContext
+  ): DualLayer<*> {
+    if (!renderProps.isPro) {
+      return NotProScreen(
+        onBack = context.eventHandler {
+          setOutput(Output.Cancelled)
+        }
+      ).let { DualLayer(it) }
+    }
     return when (renderState) {
       is PickingSensor -> context.renderChild(
         child = sensorListWorkflow,
@@ -58,7 +70,7 @@ class TaskerWorkflow
             setOutput(Output.Cancelled)
           }
         }
-      }
+      }.let { DualLayer(it) }
       is ModifyingSensor -> {
         val sensor = renderProps.sensors[renderState.sensorIndex]
 
