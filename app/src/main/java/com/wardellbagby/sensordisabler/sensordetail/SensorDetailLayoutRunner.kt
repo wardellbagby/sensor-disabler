@@ -20,6 +20,7 @@ import com.wardellbagby.sensordisabler.recycler.HorizontalPaddingItemDecoration
 import com.wardellbagby.sensordisabler.sensordetail.Row.MockableValueRow
 import com.wardellbagby.sensordisabler.sensordetail.Row.ModificationTypeRow
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Rendering
+import com.wardellbagby.sensordisabler.util.SensorValueData
 import kotlin.math.max
 import kotlin.math.min
 
@@ -31,8 +32,8 @@ sealed class Row {
   ) : Row()
 
   data class MockableValueRow(
-    val mockableValue: MockableValue,
-    val onMockValueChanged: (MockableValue) -> Unit
+    val value: SensorValueData,
+    val onValueChanged: (SensorValueData) -> Unit
   ) : Row()
 }
 
@@ -61,8 +62,8 @@ class SensorDetailLayoutRunner(
           val slider = this.view.findViewById<Slider>(R.id.value)
 
           bind { data ->
-            val mockableValue = data.mockableValue
-            label.text = data.mockableValue.title
+            val mockableValue = data.value
+            label.text = data.value.title
             slider.apply {
               clearOnSliderTouchListeners()
 
@@ -74,7 +75,7 @@ class SensorDetailLayoutRunner(
               addOnSliderTouchListener(object : OnSliderTouchListener {
                 override fun onStartTrackingTouch(slider: Slider) = Unit
                 override fun onStopTrackingTouch(slider: Slider) {
-                  data.onMockValueChanged(mockableValue.copy(value = slider.value))
+                  data.onValueChanged(mockableValue.copy(value = slider.value))
                 }
               })
             }

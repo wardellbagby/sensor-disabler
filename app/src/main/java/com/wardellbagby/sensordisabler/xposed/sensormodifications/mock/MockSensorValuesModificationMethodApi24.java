@@ -12,7 +12,6 @@ import java.util.HashMap;
  * which is now a HashMap.
  *
  * @author Wardell Bagby
- * @author Wardell Bagby
  */
 
 public class MockSensorValuesModificationMethodApi24

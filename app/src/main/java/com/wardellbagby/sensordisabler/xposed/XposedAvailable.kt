@@ -74,7 +74,6 @@ data class XposedUnavailableScreen(
 
 }
 
-@Suppress("FunctionName")
 class XposedUnavailableWorkflow
 @Inject constructor(
   private val activityProvider: ActivityProvider

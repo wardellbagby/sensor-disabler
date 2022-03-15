@@ -3,8 +3,8 @@ package com.wardellbagby.sensordisabler.tasker
 import android.content.Context
 import android.hardware.Sensor
 import android.os.Bundle
-import com.wardellbagby.sensordisabler.sensordetail.MockableValue
 import com.wardellbagby.sensordisabler.util.ModificationType
+import com.wardellbagby.sensordisabler.util.SensorValueData
 import com.wardellbagby.sensordisabler.util.SensorUtil
 
 const val taskerFireSettings = "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
@@ -32,8 +32,8 @@ fun ModificationType.persist(bundle: Bundle) {
     )
     ModificationType.Remove -> bundle.putString(modificationTypeKey, removeModificationTypeValue)
     is ModificationType.Mock -> {
-      val labels = mockedValues.map { it.title }
-      val values = mockedValues.map { it.value }
+      val labels = sensorValues.map { it.title }
+      val values = sensorValues.map { it.value }
       bundle.putString(modificationTypeKey, mockModificationTypeValue)
       bundle.putStringArray(mockLabelsKey, labels.toTypedArray())
       bundle.putFloatArray(mockValuesKey, values.toFloatArray())
@@ -59,9 +59,8 @@ fun Bundle.getModificationType(sensor: Sensor): ModificationType? {
       } else {
         ModificationType.Mock(
           labels.zip(values)
-            .mapIndexed { index, (label, value) ->
-              MockableValue(
-                id = index,
+            .map { (label, value) ->
+              SensorValueData(
                 title = label,
                 value = value,
                 maximum = sensor.maximumRange,

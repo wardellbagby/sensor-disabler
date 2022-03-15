@@ -10,15 +10,12 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
  */
 fun XC_LoadPackage.LoadPackageParam.setXposedVisibilityForManager() {
   if (processName == BuildConfig.APPLICATION_ID) {
-    Log.e("Sensor Disabler", "DISABLING for $processName")
+    Log.d("Sensor Disabler", "Found Xposed (or compatible framework)")
     XposedHelpers.findAndHookMethod(
       "com.wardellbagby.sensordisabler.xposed.XposedAvailable",
       classLoader,
       "isXposedAvailable",
       methodHook(
-        before = {
-          Log.e("Sensor Disabler", "hooked Xposed ")
-        },
         after = {
           result = true
         })

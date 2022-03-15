@@ -17,7 +17,7 @@ import com.wardellbagby.sensordisabler.tasker.TaskerWorkflow.*
 import com.wardellbagby.sensordisabler.tasker.TaskerWorkflow.State.ModifyingSensor
 import com.wardellbagby.sensordisabler.tasker.TaskerWorkflow.State.PickingSensor
 import com.wardellbagby.sensordisabler.util.ModificationType
-import com.wardellbagby.sensordisabler.util.defaultMockedValues
+import com.wardellbagby.sensordisabler.util.defaultSensorValues
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
@@ -79,7 +79,7 @@ class TaskerWorkflow
           props = SensorDetailWorkflow.Props(
             sensor = sensor,
             modificationType = ModificationType.DoNothing,
-            defaultMockableValues = sensor.defaultMockedValues(androidContext)
+            defaultSensorValues = sensor.defaultSensorValues(androidContext)
           )
         ) {
           when (it) {

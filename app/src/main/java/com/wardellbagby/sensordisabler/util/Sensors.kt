@@ -4,23 +4,36 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Parcelable
-import com.wardellbagby.sensordisabler.sensordetail.MockableValue
 import com.wardellbagby.sensordisabler.util.ModificationType.*
 import kotlinx.parcelize.Parcelize
 
-fun Sensor.getMockedValues(context: Context): List<MockableValue> {
+/**
+ * Represents a value that the user has saved that will be used when mocking a sensor.
+ */
+@Parcelize
+data class SensorValueData(
+  val title: String,
+  val minimum: Float,
+  val maximum: Float,
+  val value: Float
+) : Parcelable
+
+/**
+ * Returns the user's saved sensor values for this sensor, or the default if the user has never
+ * saved any mocked values.
+ */
+fun Sensor.getSensorValues(context: Context): List<SensorValueData> {
   val prefs = context.getSensorPreferences()
 
   val mockedValuesKey = SensorUtil.generateUniqueSensorMockValuesKey(this)
   val mockedValues = prefs.getSensorMockedValues(mockedValuesKey)
   return if (mockedValues == null || mockedValues.isEmpty()) {
-    defaultMockedValues(context)
+    defaultSensorValues(context)
   } else {
     mockedValues
       .zip(SensorUtil.getLabelsForSensor(context, this))
-      .mapIndexed { index, (value, label) ->
-        MockableValue(
-          id = index,
+      .map { (value, label) ->
+        SensorValueData(
           title = label,
           value = value,
           minimum = SensorUtil.getMinimumValueForSensor(this),
@@ -30,11 +43,10 @@ fun Sensor.getMockedValues(context: Context): List<MockableValue> {
   }
 }
 
-fun Sensor.defaultMockedValues(context: Context): List<MockableValue> {
+fun Sensor.defaultSensorValues(context: Context): List<SensorValueData> {
   return SensorUtil.getLabelsForSensor(context, this)
-    .mapIndexed { index, label ->
-      MockableValue(
-        id = index,
+    .map { label ->
+      SensorValueData(
         title = label,
         value = SensorUtil.getMinimumValueForSensor(this),
         maximum = maximumRange,
@@ -51,7 +63,7 @@ sealed class ModificationType : Parcelable {
   object Remove : ModificationType()
 
   @Parcelize
-  data class Mock(val mockedValues: List<MockableValue>) : ModificationType()
+  data class Mock(val sensorValues: List<SensorValueData>) : ModificationType()
 }
 
 fun Sensor.getModificationType(context: Context): ModificationType {
@@ -60,7 +72,7 @@ fun Sensor.getModificationType(context: Context): ModificationType {
   return when (prefs.getInt(enabledStatusKey, Constants.SENSOR_STATUS_DO_NOTHING)) {
     Constants.SENSOR_STATUS_DO_NOTHING -> DoNothing
     Constants.SENSOR_STATUS_REMOVE_SENSOR -> Remove
-    Constants.SENSOR_STATUS_MOCK_VALUES -> Mock(getMockedValues(context))
+    Constants.SENSOR_STATUS_MOCK_VALUES -> Mock(getSensorValues(context))
     else -> DoNothing
   }
 }
@@ -102,7 +114,7 @@ fun Sensor.saveSettings(
   if (modificationType is Mock) {
     prefs.putSensorMockedValues(
       mockedValuesPrefsKey,
-      modificationType.mockedValues.map { it.value }.toFloatArray()
+      modificationType.sensorValues.map { it.value }.toFloatArray()
     )
   }
 }

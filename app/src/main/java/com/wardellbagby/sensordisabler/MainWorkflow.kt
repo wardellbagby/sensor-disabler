@@ -31,12 +31,11 @@ import com.wardellbagby.sensordisabler.toolbar.ToolbarLayoutRunner
 import com.wardellbagby.sensordisabler.toolbar.ToolbarProps
 import com.wardellbagby.sensordisabler.toolbar.ToolbarWorkflow
 import com.wardellbagby.sensordisabler.util.Constants
-import com.wardellbagby.sensordisabler.util.getMockedValues
 import com.wardellbagby.sensordisabler.util.getModificationType
+import com.wardellbagby.sensordisabler.util.getSensorValues
 import com.wardellbagby.sensordisabler.util.saveSettings
 import com.wardellbagby.sensordisabler.xposed.XposedUnavailableWorkflow
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 import com.wardellbagby.sensordisabler.sensordetail.SensorDetailWorkflow.Props as DetailProps
@@ -51,7 +50,6 @@ val MainViewRegistry = ViewRegistry(
   SettingsLayoutRunner
 )
 
-@ActivityRetainedScoped
 class MainWorkflow
 @Inject constructor(
   @ApplicationContext private val androidContext: Context,
@@ -124,7 +122,7 @@ class MainWorkflow
           props = DetailProps(
             sensor = sensor,
             modificationType = sensor.getModificationType(androidContext),
-            defaultMockableValues = sensor.getMockedValues(androidContext)
+            defaultSensorValues = sensor.getSensorValues(androidContext)
           ),
           handler = {
             when (it) {

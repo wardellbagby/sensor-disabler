@@ -8,9 +8,6 @@ import androidx.annotation.Nullable;
 import com.wardellbagby.sensordisabler.R;
 import java.util.regex.Pattern;
 
-/**
- * @author Wardell
- */
 public final class SensorUtil {
 
   private static final String SENSOR_SEPARATOR = "|*^&SensorDisabler&^*|";

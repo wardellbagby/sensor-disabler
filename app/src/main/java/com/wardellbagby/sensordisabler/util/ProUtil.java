@@ -3,9 +3,6 @@ package com.wardellbagby.sensordisabler.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * @author Wardell
- */
 public final class ProUtil {
   private ProUtil() {
   }

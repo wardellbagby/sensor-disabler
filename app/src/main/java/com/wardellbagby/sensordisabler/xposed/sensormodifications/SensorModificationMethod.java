@@ -86,6 +86,9 @@ public abstract class SensorModificationMethod {
   /**
    * Is the package referenced by packageName allowed to see what the true sensor and its value are?
    *
+   * If this is true, Sensor Disabler will potentially modify this sensor. If it isn't true, then
+   * Sensor Disabler will do nothing to this sensor.
+   *
    * @param packageName The package name to check.
    * @param sensor The sensor to check against.
    * @param context A context that can b e us

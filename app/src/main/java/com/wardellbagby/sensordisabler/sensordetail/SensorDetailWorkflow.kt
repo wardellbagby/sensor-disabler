@@ -19,6 +19,7 @@ import com.wardellbagby.sensordisabler.toolbar.NavigationIcon.MENU
 import com.wardellbagby.sensordisabler.toolbar.ToolbarAction
 import com.wardellbagby.sensordisabler.toolbar.ToolbarProps
 import com.wardellbagby.sensordisabler.util.ModificationType
+import com.wardellbagby.sensordisabler.util.SensorValueData
 import com.wardellbagby.sensordisabler.util.SensorUtil
 import com.wardellbagby.sensordisabler.util.displayName
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,7 +33,7 @@ class SensorDetailWorkflow
   data class Props(
     val sensor: Sensor,
     val modificationType: ModificationType,
-    val defaultMockableValues: List<MockableValue>
+    val defaultSensorValues: List<SensorValueData>
   )
 
   sealed class State : Parcelable {
@@ -174,27 +175,27 @@ class SensorDetailWorkflow
       onClick = context.eventHandler {
         if (state.modificationType !is ModificationType.Mock) {
           state =
-            EditingSensor(modificationType = ModificationType.Mock(props.defaultMockableValues))
+            EditingSensor(modificationType = ModificationType.Mock(props.defaultSensorValues))
         }
       }
     )
 
-    val isMockableSensor = renderProps.defaultMockableValues.isNotEmpty()
+    val isMockableSensor = renderProps.defaultSensorValues.isNotEmpty()
 
     return when {
       renderState.modificationType is ModificationType.Mock -> {
-        val mockableRows = renderState.getMockableValues(renderProps).mapIndexed { index, value ->
+        val valueRows = renderState.getSensorValues(renderProps).mapIndexed { index, value ->
           Row.MockableValueRow(
-            mockableValue = value,
-            onMockValueChanged = context.eventHandler { newValue ->
+            value = value,
+            onValueChanged = context.eventHandler { newValue ->
               state = EditingSensor(
                 ModificationType.Mock(
-                  mockedValues = state.getMockableValues(props).replace(index, newValue)
+                  sensorValues = state.getSensorValues(props).replace(index, newValue)
                 )
               )
             })
         }
-        defaultRows + mockSensorRow + mockableRows
+        defaultRows + mockSensorRow + valueRows
       }
       isMockableSensor -> defaultRows + mockSensorRow
       else -> defaultRows
@@ -206,11 +207,11 @@ class SensorDetailWorkflow
  * Return either the mockable values stored in state (when the user has selected "Mock Values" as
  * a modification option) or the default mockable values if they don't have "Mock Values" selected.
  */
-private fun State.getMockableValues(props: Props): List<MockableValue> {
+private fun State.getSensorValues(props: Props): List<SensorValueData> {
   return if (modificationType is ModificationType.Mock) {
-    (modificationType as ModificationType.Mock).mockedValues
+    (modificationType as ModificationType.Mock).sensorValues
   } else {
-    props.defaultMockableValues
+    props.defaultSensorValues
   }
 }
 

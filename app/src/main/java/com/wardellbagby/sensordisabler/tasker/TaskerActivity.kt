@@ -55,7 +55,7 @@ private fun Saved.toBlurb(): String {
       DoNothing -> "do nothing."
       Remove -> "be removed"
       is Mock -> "have its values mocked. The values will be: ${
-        modificationType.mockedValues.map { "${it.title} ${it.value}" }
+        modificationType.sensorValues.map { "${it.title} ${it.value}" }
       }"
     }
   )
