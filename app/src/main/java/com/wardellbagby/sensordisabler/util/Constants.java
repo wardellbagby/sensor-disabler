@@ -13,14 +13,8 @@
 package com.wardellbagby.sensordisabler.util;
 
 import android.content.Context;
-import com.wardellbagby.sensordisabler.BuildConfig;
 
 public final class Constants {
-
-  //TODO If this file ends up being unwieldy, refactor into different files.
-
-  public static final String LOG_TAG = "Disable Prox Sensor"; //$NON-NLS-1$
-  public static final boolean IS_LOGGABLE = BuildConfig.DEBUG;
 
   public static final String SKU_TASKER = "tasker_purchase";
   public static final String SKU_DONATION_1 = "donation_1";
@@ -31,39 +25,12 @@ public final class Constants {
   public static final String PREFS_KEY_TASKER = "prefs_key_tasker";
   public static final String PREFS_KEY_FREELOAD = "prefs_key_freeload";
   public static final String PREFS_KEY_BLOCKLIST = "enabled_blocking_list";
-  public static final String PREFS_KEY_NEVER_SHOW_XPOSED_INSTALLED = "never_show_xposed_installed";
 
   public static final int SENSOR_STATUS_DO_NOTHING = 0;
   public static final int SENSOR_STATUS_REMOVE_SENSOR = 1;
   public static final int SENSOR_STATUS_MOCK_VALUES = 2;
 
-  public static final String INTENT_APP_PACKAGE = "appPackage";
-  public static final String INTENT_APP_LABEL = "appLabel";
-
-  public static final String BLACKLIST = "blacklist";
-  public static final String WHITELIST = "whitelist";
-
   private Constants() {
     throw new UnsupportedOperationException("This class is non-instantiable"); //$NON-NLS-1$
-  }
-
-  /**
-   * Determines the "versionCode" in the {@code AndroidManifest}.
-   *
-   * @param context to read the versionCode.
-   * @return versionCode of the app.
-   */
-  public static int getVersionCode(final Context context) {
-    try {
-      return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
-    } catch (final UnsupportedOperationException e) {
-      /*
-       * This exception is thrown by test contexts
-       */
-
-      return 1;
-    } catch (final Exception e) {
-      throw new RuntimeException(e);
-    }
   }
 }

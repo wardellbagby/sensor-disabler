@@ -28,10 +28,6 @@ data class ToolbarProps(
   val overflowMenu: List<ToolbarAction> = listOf()
 )
 
-sealed class ToolbarOutput {
-  object NavigationIconClicked : ToolbarOutput()
-}
-
 data class ToolbarAction(
   @DrawableRes val drawable: Int = 0,
   val title: CharSequence,
