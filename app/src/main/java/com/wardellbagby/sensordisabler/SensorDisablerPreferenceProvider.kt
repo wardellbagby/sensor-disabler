@@ -1,10 +1,15 @@
-package com.wardellbagby.sensordisabler;
+package com.wardellbagby.sensordisabler
 
-import com.crossbowffs.remotepreferences.RemotePreferenceProvider;
-import com.wardellbagby.sensordisabler.util.Constants;
+import com.crossbowffs.remotepreferences.RemotePreferenceProvider
+import com.wardellbagby.sensordisabler.util.Constants
 
-public class SensorDisablerPreferenceProvider extends RemotePreferenceProvider {
-  public SensorDisablerPreferenceProvider() {
-    super("com.wardellbagby.sensordisabler", new String[] { Constants.PREFS_FILE_NAME });
+class SensorDisablerPreferenceProvider : RemotePreferenceProvider(
+  "com.wardellbagby.sensordisabler", arrayOf(
+    Constants.PREFS_FILE_NAME
+  )
+) {
+  override fun checkAccess(prefFileName: String, prefKey: String, write: Boolean): Boolean {
+    // Allow all reads, but block all writes. Only Sensor Disabler should be able to write.
+    return !write
   }
 }
