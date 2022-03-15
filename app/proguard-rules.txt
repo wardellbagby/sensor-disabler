@@ -1,0 +1,3 @@
+-dontobfuscate
+-dontobfuscate
+-keep class com.wardellbagby.sensordisabler.xposed.**
