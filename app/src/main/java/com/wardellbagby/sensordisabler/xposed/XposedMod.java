@@ -10,6 +10,8 @@ import com.wardellbagby.sensordisabler.xposed.sensormodifications.remove.RemoveS
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
+import static com.wardellbagby.sensordisabler.xposed.ManagerVisibilityKt.setXposedVisibilityForManager;
+
 /**
  * Shout out to abusalimov for his Light Sensor fix that inspired this app.
  */
@@ -19,6 +21,7 @@ public class XposedMod implements IXposedHookLoadPackage {
   public void handleLoadPackage(final LoadPackageParam lpparam) throws Throwable {
     mockSensorValues(lpparam);
     removeSensors(lpparam);
+    setXposedVisibilityForManager(lpparam);
   }
 
   /**

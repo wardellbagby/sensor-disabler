@@ -52,6 +52,9 @@
   <string name="cannot_purchase_pro">Cannot purchase Pro version</string>
   <string name="no_google_play">Google Play is not available</string>
   <string name="unknown">Unknown</string>
+  <string name="xposed_unavailable">Xposed (or a compatible framework) isn\'t detected on your device. Sensor Disabler will not work on your device. Please install Xposed or uninstall this application.\n\nIf you already have Xposed installed, check that this module has been activated and try restarting your device.</string>
+  <string name="uninstall">Uninstall</string>
+  <string name="exit">Exit</string>
   <string-array name="accelerometer_values">
     <item>Acceleration X (m/s²):</item>
     <item>Acceleration Y (m/s²):</item>

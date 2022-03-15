@@ -34,6 +34,7 @@ import com.wardellbagby.sensordisabler.util.Constants
 import com.wardellbagby.sensordisabler.util.getMockedValues
 import com.wardellbagby.sensordisabler.util.getModificationType
 import com.wardellbagby.sensordisabler.util.saveSettings
+import com.wardellbagby.sensordisabler.xposed.XposedUnavailableWorkflow
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.parcelize.Parcelize
@@ -58,6 +59,7 @@ class MainWorkflow
   private val sensorDetailWorkflow: SensorDetailWorkflow,
   private val settingsWorkflow: SettingsWorkflow,
   private val billingWorkflow: BillingWorkflow,
+  private val xposedUnavailableWorkflow: XposedUnavailableWorkflow,
   private val toaster: Toaster
 ) : StatefulWorkflow<Props, State, Nothing, DualLayer<*>>() {
   private companion object {
@@ -93,6 +95,7 @@ class MainWorkflow
     renderState: State,
     context: RenderContext
   ): DualLayer<*> {
+    val xposedUnavailableRendering = context.renderChild(xposedUnavailableWorkflow)
     val billingRendering = context.renderChild(
       child = billingWorkflow,
       props = BillingWorkflow.Props(
@@ -165,7 +168,7 @@ class MainWorkflow
 
     return DualLayer(
       base = childRendering.beneathModals,
-      modal = billingRendering ?: childRendering.modalRendering
+      modal = xposedUnavailableRendering ?: billingRendering ?: childRendering.modalRendering
     )
   }
 
